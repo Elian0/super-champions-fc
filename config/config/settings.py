@@ -5,8 +5,13 @@ import dj_database_url
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-champinones-fc-super-secret-key-change-in-production'
-DEBUG = True
+DEBUG = False
+
 ALLOWED_HOSTS = ['*']
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://super-champions-fc-production.up.railway.app',
+]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
