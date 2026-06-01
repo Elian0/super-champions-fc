@@ -1,0 +1,137 @@
+{% extends "portal/base_portal.html" %}
+{% block title %}Dashboard — Super Champiñones FC{% endblock %}
+{% block nav_dashboard %}active{% endblock %}
+
+{% block content %}
+<div class="page">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Dashboard</div>
+      <div class="page-sub">Bienvenido, {{ request.user.get_full_name|default:request.user.username }} — Super Champiñones FC</div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <a href="{% url 'evento_lista' %}" class="btn btn-primary btn-sm">⚽ Ver Partidos</a>
+      <a href="{% url 'venta_crear' %}" class="btn btn-success btn-sm">🎟 Nueva Venta</a>
+    </div>
+  </div>
+
+  {% for msg in messages %}
+  <div class="alert alert-{{ msg.tags }}" style="margin-bottom:20px;">{{ msg }}</div>
+  {% endfor %}
+
+  <div class="stats-grid">
+    <div class="stat-card blue"><div class="stat-icon"></div><div class="stat-value">{{ stats.boletos_hoy }}</div><div class="stat-label">Boletos Hoy</div></div>
+    <div class="stat-card gold"><div class="stat-icon"></div><div class="stat-value">{{ stats.vips_activos }}</div><div class="stat-label">Miembros VIP</div></div>
+    <div class="stat-card green"><div class="stat-icon"></div><div class="stat-value">{{ stats.ingresos_hoy }}</div><div class="stat-label">Bs. Recaudados Hoy</div></div>
+    <div class="stat-card red"><div class="stat-icon"></div><div class="stat-value">{{ stats.total_partidos }}</div><div class="stat-label">Partidos Activos</div></div>
+  </div>
+
+  <div class="dash-grid">
+    <!-- Partidos Programados -->
+    <div class="card">
+      <div class="card-header"><span class="card-title">📅 Partidos Programados</span><a href="{% url 'evento_lista' %}" class="btn btn-sm btn-primary">Ver todos</a></div>
+      <div class="card-body" style="padding:0;">
+        <table><thead><tr><th>Partido</th><th>Fecha</th></tr></thead>
+        <tbody>
+          {% for p in partidos_programados %}
+          <tr>
+            <td>{{ p.equipo_local }} vs {{ p.equipo_visitante }}</td>
+            <td>{{ p.fecha|date:"d/m/Y" }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="2"><div class="empty-state"><div class="empty-state-icon">⚽</div><p>Sin partidos programados</p></div></td></tr>
+          {% endfor %}
+        </tbody></table>
+      </div>
+    </div>
+
+    <!-- Partidos en Curso -->
+    <div class="card">
+      <div class="card-header"><span class="card-title">🔴 En Curso</span><a href="{% url 'evento_lista' %}" class="btn btn-sm btn-danger">Ver todos</a></div>
+      <div class="card-body" style="padding:0;">
+        <table><thead><tr><th>Partido</th><th>Hora</th></tr></thead>
+        <tbody>
+          {% for p in partidos_en_curso %}
+          <tr>
+            <td>{{ p.equipo_local }} vs {{ p.equipo_visitante }}</td>
+            <td>{{ p.hora }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="2"><div class="empty-state"><div class="empty-state-icon">⏸</div><p>Sin partidos en curso</p></div></td></tr>
+          {% endfor %}
+        </tbody></table>
+      </div>
+    </div>
+
+    <!-- Partidos Finalizados -->
+    <div class="card">
+      <div class="card-header"><span class="card-title">✅ Finalizados</span><a href="{% url 'evento_lista' %}" class="btn btn-sm btn-secondary">Ver todos</a></div>
+      <div class="card-body" style="padding:0;">
+        <table><thead><tr><th>Partido</th><th>Fecha</th></tr></thead>
+        <tbody>
+          {% for p in partidos_finalizados %}
+          <tr>
+            <td>{{ p.equipo_local }} vs {{ p.equipo_visitante }}</td>
+            <td>{{ p.fecha|date:"d/m/Y" }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="2"><div class="empty-state"><div class="empty-state-icon">✓</div><p>Sin partidos finalizados</p></div></td></tr>
+          {% endfor %}
+        </tbody></table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><span class="card-title">Últimas Ventas</span><a href="{% url 'venta_lista' %}" class="btn btn-sm btn-primary">Ver todas</a></div>
+      <div class="card-body" style="padding:0;">
+        <table><thead><tr><th>Miembro</th><th>Partido</th><th>Sector</th></tr></thead>
+        <tbody>
+          {% for v in ultimas_ventas %}
+          <tr>
+            <td>{{ v.miembro_vip.nombre_completo|default:"Público General" }}</td>
+            <td>{{ v.evento.equipo_local }} vs {{ v.evento.equipo_visitante }}</td>
+            <td><span class="badge badge-blue">{{ v.get_sector_display }}</span></td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="3"><div class="empty-state"><div class="empty-state-icon"></div><p>No hay ventas registradas</p></div></td></tr>
+          {% endfor %}
+        </tbody></table>
+      </div>
+    </div>
+  </div>
+
+  {% if recargas_pendientes %}
+  <div style="margin-top:22px;">
+    <div class="card" style="border-color:rgba(240,192,64,.25);">
+      <div class="card-header" style="background:rgba(240,192,64,.06);">
+        <span class="card-title">Recargas Pendientes ({{ recargas_pendientes|length }})</span>
+        <a href="{% url 'miembro_lista' %}" class="btn btn-warning btn-sm">Gestionar</a>
+      </div>
+      <div class="card-body" style="padding:0;">
+        <table><thead><tr><th>Miembro</th><th>Monto</th><th>Método</th><th>Fecha</th><th>Acción</th></tr></thead>
+        <tbody>
+          {% for r in recargas_pendientes %}
+          <tr>
+            <td>{{ r.miembro.nombre_completo }}</td>
+            <td><strong>{{ r.monto }} Bs</strong></td>
+            <td>{{ r.get_metodo_pago_display }}</td>
+            <td>{{ r.fecha_solicitud|date:"d/m/Y H:i" }}</td>
+            <td class="action-btns">
+              <form method="post" action="{% url 'recarga_aprobar' r.pk %}" style="display:inline">
+                {% csrf_token %}<input type="hidden" name="accion" value="APROBADA">
+                <button type="submit" class="btn btn-sm btn-success">Aprobar</button>
+              </form>
+              <form method="post" action="{% url 'recarga_aprobar' r.pk %}" style="display:inline">
+                {% csrf_token %}<input type="hidden" name="accion" value="RECHAZADA">
+                <button type="submit" class="btn btn-sm btn-danger">Rechazar</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody></table>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

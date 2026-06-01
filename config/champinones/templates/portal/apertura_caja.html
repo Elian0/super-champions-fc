@@ -1,0 +1,226 @@
+{% extends "portal/base_portal.html" %}
+{% block title %}Apertura de Caja{% endblock %}
+{% block nav_dashboard %}active{% endblock %}
+
+{% block content %}
+<div class="page">
+  <div class="page-header">
+    <div><div class="page-title">🔓 Apertura de Caja</div></div>
+  </div>
+
+  {% if cierre_hoy %}
+    <!-- Caja cerrada hoy -->
+    <div class="card" style="border-left: 4px solid #c0392b; background: #fdecea;">
+      <div class="card-header" style="background: #c0392b; color: white;">
+        <h3>🔒 Caja Cerrada Hoy</h3>
+      </div>
+      <div class="card-body">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-top: 15px;">
+          <div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <div style="font-size: 12px; color: #7f8c8d; margin-bottom: 5px;">Cerrado por</div>
+            <div style="font-size: 18px; font-weight: 600; color: #2c3e50;">
+              {{ cierre_hoy.usuario_cierre.get_full_name }}
+            </div>
+          </div>
+          <div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <div style="font-size: 12px; color: #7f8c8d; margin-bottom: 5px;">Hora de Cierre</div>
+            <div style="font-size: 18px; font-weight: 600; color: #c0392b;">
+              {{ cierre_hoy.fecha_cierre|time:"H:i" }}
+            </div>
+          </div>
+          <div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <div style="font-size: 12px; color: #7f8c8d; margin-bottom: 5px;">Total Recaudado</div>
+            <div style="font-size: 18px; font-weight: 600; color: #c0392b;">
+              {{ cierre_hoy.total_recaudado|floatformat:2 }} BOB
+            </div>
+          </div>
+        </div>
+
+        {% if apertura_hoy %}
+        <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 6px; border-left: 4px solid #3498db;">
+          <strong>📌 Apertura de hoy:</strong><br>
+          Abierta por <strong>{{ apertura_hoy.usuario_apertura.get_full_name }}</strong> a las <strong>{{ apertura_hoy.fecha_apertura|time:"H:i" }}</strong><br>
+          Monto inicial: <strong>{{ apertura_hoy.monto_inicial|floatformat:2 }} BOB</strong>
+        </div>
+        {% endif %}
+
+        {% if cierre_hoy.notas %}
+        <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 6px; border-left: 4px solid #3498db;">
+          <strong>Notas de cierre:</strong><br>
+          {{ cierre_hoy.notas }}
+        </div>
+        {% endif %}
+
+        <div style="margin-top: 20px; text-align: center; padding: 15px; background: #fbe9e7; border-radius: 6px;">
+          <strong style="color: #c0392b;">✓ La caja ya fue cerrada hoy y no puede abrirse nuevamente.</strong>
+        </div>
+      </div>
+    </div>
+
+  {% elif apertura_hoy %}
+    <!-- Caja ya abierta hoy -->
+    <div class="card" style="border-left: 4px solid #27ae60; background: #ecf0f1;">
+      <div class="card-header" style="background: #27ae60; color: white;">
+        <h3>✅ Caja Abierta</h3>
+      </div>
+      <div class="card-body">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 15px;">
+          
+          <!-- Card: Empleado -->
+          <div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <div style="font-size: 12px; color: #7f8c8d; margin-bottom: 5px;">Abierto por</div>
+            <div style="font-size: 18px; font-weight: 600; color: #2c3e50;">
+              {{ apertura_hoy.usuario_apertura.get_full_name }}
+            </div>
+          </div>
+
+          <!-- Card: Monto Inicial -->
+          <div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <div style="font-size: 12px; color: #7f8c8d; margin-bottom: 5px;">Monto Inicial</div>
+            <div style="font-size: 18px; font-weight: 600; color: #27ae60;">
+              {{ apertura_hoy.monto_inicial|floatformat:2 }} BOB
+            </div>
+          </div>
+
+          <!-- Card: Hora Apertura -->
+          <div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <div style="font-size: 12px; color: #7f8c8d; margin-bottom: 5px;">Hora de Apertura</div>
+            <div style="font-size: 18px; font-weight: 600; color: #2c3e50;">
+              {{ apertura_hoy.fecha_apertura|time:"H:i" }}
+            </div>
+          </div>
+
+        </div>
+
+        {% if apertura_hoy.notas %}
+        <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 6px; border-left: 4px solid #3498db;">
+          <strong>Notas:</strong><br>
+          {{ apertura_hoy.notas }}
+        </div>
+        {% endif %}
+
+        <div style="margin-top: 20px; text-align: center; padding: 15px; background: #d5f4e6; border-radius: 6px;">
+          <strong style="color: #27ae60;">✓ La caja está lista para realizar operaciones</strong>
+        </div>
+      </div>
+    </div>
+
+  {% else %}
+    <!-- Formulario para abrir caja -->
+    <div class="card">
+      <div class="card-header">
+        <h3>📋 Abrir Caja Hoy</h3>
+        <p style="margin: 5px 0 0 0; color: #7f8c8d; font-size: 14px;">
+          Registra el monto inicial con el que se abre la caja hoy.
+        </p>
+      </div>
+
+      <form method="post" class="card-body">
+        {% csrf_token %}
+
+        <!-- Campo: Monto Inicial -->
+        <div style="margin-bottom: 20px;">
+          <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #2c3e50;">
+            💰 Monto Inicial (BOB)
+          </label>
+          <input 
+            type="number" 
+            name="monto_inicial" 
+            placeholder="Ej: 1000.00"
+            step="0.01"
+            min="0"
+            required
+            style="width: 100%; padding: 12px; border: 1px solid #bdc3c7; border-radius: 6px; font-size: 16px;"
+          >
+        </div>
+
+        <!-- Campo: Notas (opcional) -->
+        <div style="margin-bottom: 20px;">
+          <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #2c3e50;">
+            📝 Notas (Opcional)
+          </label>
+          <textarea 
+            name="notas" 
+            placeholder="Ej: Efectivo recibido de caja anterior, depósitos, etc."
+            style="width: 100%; padding: 12px; border: 1px solid #bdc3c7; border-radius: 6px; font-size: 14px; min-height: 100px; font-family: inherit; resize: vertical;"
+          ></textarea>
+        </div>
+
+        <!-- Información del Usuario -->
+        <div style="padding: 15px; background: #f8f9fa; border-radius: 6px; margin-bottom: 20px; border-left: 4px solid #3498db;">
+          <strong>👤 Empleado que Abre Caja:</strong> {{ request.user.get_full_name }}<br>
+          <strong>📅 Fecha:</strong> Hoy
+        </div>
+
+        <!-- Botones -->
+        <div style="display: flex; gap: 10px; margin-top: 25px;">
+          <button 
+            type="submit" 
+            class="btn btn-primary"
+            style="flex: 1; padding: 12px; background: #27ae60; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 15px;"
+          >
+            ✅ Abrir Caja
+          </button>
+          <a 
+            href="/dashboard/" 
+            class="btn"
+            style="flex: 1; padding: 12px; background: #95a5a6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 15px; text-align: center; text-decoration: none;"
+          >
+            ← Cancelar
+          </a>
+        </div>
+      </form>
+    </div>
+
+    <!-- Información de ayuda -->
+    <div class="card" style="margin-top: 20px; background: #fff3cd; border-left: 4px solid #f39c12;">
+      <div class="card-body">
+        <strong style="color: #856404;">ℹ️ Información Importante:</strong>
+        <ul style="margin: 10px 0 0 0; color: #856404;">
+          <li>La apertura de caja debe realizarse <strong>al inicio del día</strong> de operaciones.</li>
+          <li>El monto inicial debe incluir el <strong>efectivo disponible</strong> para cambio.</li>
+          <li>Se registrará automáticamente <strong>quién abre la caja</strong> y <strong>a qué hora</strong>.</li>
+          <li>Una vez abierta, podrás <strong>registrar ventas</strong> normalmente.</li>
+          <li>Al cierre del día, se realizará la <strong>conciliación</strong> entre lo inicial y lo final.</li>
+        </ul>
+      </div>
+    </div>
+  {% endif %}
+
+</div>
+
+<style>
+  .card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+
+  .card-header {
+    background: #f8f9fa;
+    padding: 20px;
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  .card-header h3 {
+    margin: 0;
+    color: #2c3e50;
+    font-size: 20px;
+  }
+
+  .card-body {
+    padding: 20px;
+  }
+
+  .btn-primary:hover {
+    background: #229954 !important;
+    box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+  }
+
+  .btn-primary:active {
+    transform: translateY(1px);
+  }
+</style>
+{% endblock %}

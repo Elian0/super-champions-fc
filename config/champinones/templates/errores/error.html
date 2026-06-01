@@ -1,0 +1,251 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error {{ codigo }} — Super Champiñones FC</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .error-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+            overflow: hidden;
+        }
+        
+        .error-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        
+        .error-icon {
+            font-size: 72px;
+            margin-bottom: 20px;
+            display: block;
+        }
+        
+        .error-codigo {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+        }
+        
+        .error-titulo {
+            font-size: 28px;
+            font-weight: 600;
+            margin: 0;
+        }
+        
+        .error-body {
+            padding: 40px 30px;
+            text-align: center;
+        }
+        
+        .error-mensaje {
+            font-size: 18px;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+        
+        .error-detalles {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            line-height: 1.6;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .error-acciones {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5568d3;
+            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.4);
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: #e8eaf6;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+        
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+        }
+        
+        .error-footer {
+            background: #f8f9fa;
+            padding: 20px 30px;
+            text-align: center;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        .error-footer-text {
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+        
+        .error-footer-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .error-footer-link:hover {
+            text-decoration: underline;
+        }
+        
+        /* Animación de aparición */
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .error-container {
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        /* Responsive */
+        @media (max-width: 600px) {
+            .error-header {
+                padding: 30px 20px;
+            }
+            
+            .error-icon {
+                font-size: 56px;
+            }
+            
+            .error-codigo {
+                font-size: 36px;
+            }
+            
+            .error-titulo {
+                font-size: 22px;
+            }
+            
+            .error-body {
+                padding: 30px 20px;
+            }
+            
+            .error-mensaje {
+                font-size: 16px;
+            }
+            
+            .error-acciones {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <!-- Header -->
+        <div class="error-header">
+            <span class="error-icon">{{ titulo|slice:":1" }}</span>
+            <div class="error-codigo">{{ codigo }}</div>
+            <h1 class="error-titulo">{{ titulo|slice:"1:" }}</h1>
+        </div>
+        
+        <!-- Body -->
+        <div class="error-body">
+            <p class="error-mensaje">{{ mensaje }}</p>
+            {% if detalles %}
+            <div class="error-detalles">
+                {{ detalles }}
+            </div>
+            {% endif %}
+            
+            <!-- Acciones -->
+            <div class="error-acciones">
+                {% if user.is_authenticated %}
+                    <a href="/dashboard/" class="btn btn-primary">
+                        ← Ir al Dashboard
+                    </a>
+                    <a href="/" class="btn btn-secondary">
+                        🏠 Página Principal
+                    </a>
+                {% else %}
+                    <a href="/" class="btn btn-primary">
+                        ← Ir al Inicio
+                    </a>
+                    <a href="/registro/" class="btn btn-secondary">
+                        📝 Registrarse
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="error-footer">
+            <p class="error-footer-text">
+                Si el problema persiste, contacta a 
+                <a href="mailto:soporte@champinones.bo" class="error-footer-link">soporte@champinones.bo</a>
+            </p>
+            <p class="error-footer-text" style="margin-top: 8px;">
+                © 2026 Super Champiñones FC — Sistema de Gestión
+            </p>
+        </div>
+    </div>
+</body>
+</html>

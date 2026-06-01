@@ -1,0 +1,194 @@
+{% extends "portal/base_portal.html" %}
+{% block title %}Miembros VIP — Super Champiñones FC{% endblock %}
+{% block nav_miembros %}active{% endblock %}
+
+{% block content %}
+<div class="page">
+  <div class="page-header">
+    <div><div class="page-title">Miembros VIP</div><div class="page-sub">Gestión de socios y membresías</div></div>
+    <button class="btn btn-success" onclick="openModal('modal-crear')">➕ Nuevo Miembro</button>
+  </div>
+
+  {% for msg in messages %}<div class="alert alert-{{ msg.tags }}" style="margin-bottom:16px;">{{ msg }}</div>{% endfor %}
+
+  <form method="get" class="search-bar">
+    <input type="text" name="q" class="form-input" placeholder="🔍 Buscar por nombre, CI, correo..." value="{{ request.GET.q|default:'' }}">
+    <button type="submit" class="btn btn-primary">Buscar</button>
+    {% if request.GET.q %}<a href="{% url 'miembro_lista' %}" class="btn btn-outline">✕ Limpiar</a>{% endif %}
+  </form>
+
+  <div class="card">
+    <div class="card-body" style="padding:0;">
+      <table>
+        <thead><tr><th>CI</th><th>Nombre</th><th>Celular</th><th>Correo</th><th>Saldo (Bs)</th><th>Estado</th><th>Acciones</th></tr></thead>
+        <tbody>
+          {% for m in miembros %}
+          <tr>
+            <td><span class="badge badge-blue">{{ m.ci_completo }}</span></td>
+            <td><strong>{{ m.nombre_completo }}</strong></td>
+            <td>{{ m.celular }}</td>
+            <td style="font-size:12px;color:var(--text-secondary);">{{ m.correo }}</td>
+            <td><strong style="color:var(--accent-gold);">{{ m.saldo }}</strong></td>
+            <td>
+              <span class="badge {% if m.estado == 'ACTIVO' %}badge-green{% elif m.estado == 'SUSPENDIDO' %}badge-red{% else %}badge-blue{% endif %}">
+                {{ m.get_estado_display }}
+              </span>
+            </td>
+            <td class="action-btns">
+              <button class="btn btn-sm btn-warning" onclick="abrirRecarga({{ m.pk }}, '{{ m.nombre_completo|escapejs }}')">💳 Recargar</button>
+              <a href="{% url 'miembro_editar' m.pk %}" class="btn btn-sm btn-primary">✏️ Editar</a>
+              {% if request.user.es_admin %}
+              <a href="{% url 'miembro_eliminar' m.pk %}" class="btn btn-sm btn-danger">🗑</a>
+              {% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="7"><div class="empty-state"><div class="empty-state-icon">⭐</div><p>No hay miembros registrados.</p></div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {% if is_paginated %}
+  <div style="display:flex;gap:8px;margin-top:16px;align-items:center;">
+    {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" class="btn btn-sm btn-outline">← Anterior</a>{% endif %}
+    <span style="color:var(--text-secondary);font-size:13px;">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" class="btn btn-sm btn-outline">Siguiente →</a>{% endif %}
+  </div>
+  {% endif %}
+</div>
+
+<!-- Modal Crear Miembro -->
+<div class="modal-overlay" id="modal-crear">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">➕ Nuevo Miembro VIP</span><button class="modal-close" onclick="closeModal('modal-crear')">✕</button></div>
+    <form method="post" action="{% url 'miembro_crear' %}">
+      {% csrf_token %}
+      <div class="modal-body">
+        <div class="form-row cols-3">
+          <div class="form-group-inner"><label>CI *</label><input type="text" name="ci" class="form-input" placeholder="12345678" maxlength="8"></div>
+          <div class="form-group-inner"><label>Complemento</label><input type="text" name="complemento" class="form-input" placeholder="1A" maxlength="2"></div>
+          <div class="form-group-inner"><label>Extensión *</label>
+            <select name="extension" class="form-input">
+              <option value="">-- Dpto --</option>
+              <option value="LP">La Paz</option><option value="CB">Cochabamba</option><option value="SC">Santa Cruz</option>
+              <option value="OR">Oruro</option><option value="PT">Potosí</option><option value="CH">Chuquisaca</option>
+              <option value="TJ">Tarija</option><option value="BE">Beni</option><option value="PD">Pando</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row"><div class="form-group-inner"><label>Nombre Completo *</label><input type="text" name="nombre_completo" class="form-input" placeholder="Nombre completo"></div></div>
+        <div class="form-row cols-2">
+          <div class="form-group-inner"><label>Correo *</label><input type="email" name="correo" class="form-input" placeholder="correo@ejemplo.com"></div>
+          <div class="form-group-inner"><label>Celular *</label><input type="text" name="celular" class="form-input" placeholder="7xxxxxxx" maxlength="8"></div>
+        </div>
+        <div class="form-row cols-2">
+          <div class="form-group-inner"><label>Saldo Inicial (BOB)</label><input type="number" name="saldo" class="form-input" value="0" step="0.01" min="0"></div>
+          <div class="form-group-inner"><label>Estado</label>
+            <select name="estado" class="form-input">
+              <option value="ACTIVO">Activo</option><option value="INACTIVO">Inactivo</option><option value="SUSPENDIDO">Suspendido</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModal('modal-crear')">Cancelar</button>
+        <button type="submit" class="btn btn-primary">💾 Guardar Miembro</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Recarga -->
+<div class="modal-overlay" id="modal-recarga">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">💳 Recargar Saldo VIP</span><button class="modal-close" onclick="closeModal('modal-recarga')">✕</button></div>
+    <div class="modal-body">
+      <p style="color:var(--text-secondary);margin-bottom:16px;">Miembro: <strong id="recarga-nombre" style="color:var(--text-primary)"></strong></p>
+      <div style="margin-bottom:16px;">
+        <div style="font-size:11px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">Montos rápidos</div>
+        <div class="recarga-grid">
+          <button class="recarga-preset" onclick="setMonto(20,this)">20</button>
+          <button class="recarga-preset" onclick="setMonto(50,this)">50</button>
+          <button class="recarga-preset" onclick="setMonto(100,this)">100</button>
+          <button class="recarga-preset" onclick="setMonto(200,this)">200</button>
+        </div>
+      </div>
+      <div class="form-row cols-2">
+        <div class="form-group-inner"><label>Monto (BOB) *</label><input type="number" id="recarga-monto" class="form-input" placeholder="Ej: 50.00" step="0.01" min="10"></div>
+        <div class="form-group-inner"><label>Método de Pago</label>
+          <select id="recarga-metodo" class="form-input">
+            <option value="EFECTIVO">Efectivo</option><option value="TRANSFERENCIA">Transferencia</option><option value="QR">Pago QR</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group-inner" style="margin-top:8px;"><label>Notas</label><input type="text" id="recarga-notas" class="form-input" placeholder="Observaciones..."></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-recarga')">Cancelar</button>
+      <button class="btn btn-warning" onclick="confirmarRecarga()">💳 Procesar Recarga</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Recibo Recarga -->
+<div class="modal-overlay" id="modal-recibo-recarga">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">🧾 Recibo de Recarga</span><button class="modal-close" onclick="closeModal('modal-recibo-recarga')">✕</button></div>
+    <div class="modal-body" id="recibo-recarga-content"></div>
+    <div class="modal-footer"><button class="btn btn-primary" onclick="window.print()">🖨 Imprimir</button><button class="btn btn-outline" onclick="closeModal('modal-recibo-recarga')">Cerrar</button></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+let recargaMiembroId = null;
+function abrirRecarga(id, nombre){
+  recargaMiembroId = id;
+  document.getElementById('recarga-nombre').textContent = nombre;
+  document.getElementById('recarga-monto').value = '';
+  document.querySelectorAll('.recarga-preset').forEach(b=>b.classList.remove('selected'));
+  openModal('modal-recarga');
+}
+function setMonto(m, el){
+  document.getElementById('recarga-monto').value = m;
+  document.querySelectorAll('.recarga-preset').forEach(b=>b.classList.remove('selected'));
+  el.classList.add('selected');
+}
+async function confirmarRecarga(){
+  const monto = parseFloat(document.getElementById('recarga-monto').value);
+  const metodo = document.getElementById('recarga-metodo').value;
+  const notas = document.getElementById('recarga-notas').value;
+  if(!monto || monto < 10){toast('error','⚠️ Monto mínimo 10 Bs');return;}
+  try{
+    const r = await fetch("{% url 'recarga_crear' %}",{
+      method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':'{{ csrf_token }}'},
+      body: JSON.stringify({miembro: recargaMiembroId, monto, metodo_pago: metodo, notas})
+    });
+    const d = await r.json();
+    if(d.ok){
+      closeModal('modal-recarga');
+      const rec = d.recibo;
+      document.getElementById('recibo-recarga-content').innerHTML = `
+        <div class="ticket">
+          <div class="ticket-header"><div class="ticket-club">⭐ Super Champiñones FC</div><div class="ticket-address">Recibo de Recarga de Saldo</div></div>
+          <div class="ticket-info">
+            <div class="ticket-row"><span class="ticket-row-key">Miembro</span><span class="ticket-row-val">${rec.miembro}</span></div>
+            <div class="ticket-row"><span class="ticket-row-key">CI</span><span class="ticket-row-val">${rec.ci}</span></div>
+            <div class="ticket-row"><span class="ticket-row-key">Monto Recargado</span><span class="ticket-row-val" style="color:#1a6fdc;font-size:20px;">+ ${rec.monto} Bs</span></div>
+            <div class="ticket-row"><span class="ticket-row-key">Método</span><span class="ticket-row-val">${rec.metodo_pago}</span></div>
+            <div class="ticket-row"><span class="ticket-row-key">Nuevo Saldo</span><span class="ticket-row-val" style="color:#22d67a;font-size:20px;">${rec.saldo_nuevo} Bs</span></div>
+            <div class="ticket-row"><span class="ticket-row-key">Fecha</span><span class="ticket-row-val">${rec.fecha}</span></div>
+            <div class="ticket-row"><span class="ticket-row-key">Atendido por</span><span class="ticket-row-val">${rec.procesado_por}</span></div>
+          </div>
+        </div>`;
+      openModal('modal-recibo-recarga');
+      toast('success','💳 Recarga procesada: +' + rec.monto + ' Bs');
+      setTimeout(()=>location.reload(), 4000);
+    } else {
+      toast('error','⚠️ ' + (d.error || 'Error al procesar'));
+    }
+  } catch(e){toast('error','❌ Error de conexión');}
+}
+{% endblock %}

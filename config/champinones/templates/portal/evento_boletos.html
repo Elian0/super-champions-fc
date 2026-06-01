@@ -1,0 +1,219 @@
+{% extends "portal/base_portal.html" %}
+{% block title %}Boletos de {{ evento }}{% endblock %}
+{% block nav_partidos %}active{% endblock %}
+{% block content %}
+<div class="page">
+  <div class="page-header">
+    <div>
+      <div class="page-title">🎟️ Boletos vendidos</div>
+      <div class="page-sub">{{ evento.equipo_local }} vs {{ evento.equipo_visitante }}</div>
+    </div>
+    <a href="{% url 'evento_lista' %}" class="btn btn-outline">← Volver</a>
+  </div>
+
+  <!-- ESTADÍSTICAS -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon">🎟️</div>
+      <div class="stat-value">{{ stats.total_boletos }}</div>
+      <div class="stat-label">Total Boletos</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">💰</div>
+      <div class="stat-value">{{ stats.total_ingresos|floatformat:2 }}</div>
+      <div class="stat-label">Ingresos (BOB)</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">👤</div>
+      <div class="stat-value">{{ stats.boletos_vip }}</div>
+      <div class="stat-label">Pagados con Saldo VIP</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">💵</div>
+      <div class="stat-value">{{ stats.boletos_efectivo }}</div>
+      <div class="stat-label">Pagados en Efectivo</div>
+    </div>
+  </div>
+
+  <!-- TABLA DE BOLETOS -->
+  <div class="card">
+    <div class="card-header">
+      <h3>Detalle de Boletos</h3>
+      <div style="display:flex;gap:8px;">
+        <a href="?formato=csv" class="btn btn-sm btn-primary" title="Descargar como CSV">
+          📥 Exportar CSV
+        </a>
+        <button class="btn btn-sm btn-success" onclick="window.print()" title="Imprimir">
+          🖨️ Imprimir
+        </button>
+      </div>
+    </div>
+    <div class="card-body" style="overflow-x:auto;">
+      {% if boletos %}
+      <table style="width:100%;border-collapse:collapse;">
+        <thead>
+          <tr style="background:#2c3e50;color:white;">
+            <th style="padding:12px;text-align:left;border-bottom:2px solid #34495e;">Código</th>
+            <th style="padding:12px;text-align:left;border-bottom:2px solid #34495e;">Factura</th>
+            <th style="padding:12px;text-align:left;border-bottom:2px solid #34495e;">Cliente</th>
+            <th style="padding:12px;text-align:left;border-bottom:2px solid #34495e;">CI</th>
+            <th style="padding:12px;text-align:left;border-bottom:2px solid #34495e;">Sector</th>
+            <th style="padding:12px;text-align:right;border-bottom:2px solid #34495e;">Precio</th>
+            <th style="padding:12px;text-align:left;border-bottom:2px solid #34495e;">Pago</th>
+            <th style="padding:12px;text-align:left;border-bottom:2px solid #34495e;">Fecha/Hora</th>
+            <th style="padding:12px;text-align:left;border-bottom:2px solid #34495e;">Vendido por</th>
+            <th style="padding:12px;text-align:center;border-bottom:2px solid #34495e;">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for boleto in boletos %}
+          <tr style="border-bottom:1px solid #ecf0f1;{% cycle 'background:#f8f9fa;' '' %}">
+            <td style="padding:12px;"><strong>{{ boleto.codigo }}</strong></td>
+            <td style="padding:12px;">{{ boleto.numero_factura|default:"—" }}</td>
+            <td style="padding:12px;">
+              {% if boleto.miembro_vip %}
+                <strong>{{ boleto.miembro_vip.nombre_completo }}</strong>
+              {% else %}
+                <span style="color:#7f8c8d;">Cliente General</span>
+              {% endif %}
+            </td>
+            <td style="padding:12px;">
+              {% if boleto.miembro_vip %}
+                {{ boleto.miembro_vip.ci_completo }}
+              {% else %}
+                —
+              {% endif %}
+            </td>
+            <td style="padding:12px;">
+              <span style="background:#ecf0f1;padding:4px 8px;border-radius:4px;font-size:12px;">
+                {{ boleto.get_sector_display }}
+              </span>
+            </td>
+            <td style="padding:12px;text-align:right;"><strong>{{ boleto.precio_pagado }} Bs</strong></td>
+            <td style="padding:12px;">
+              {% if boleto.pago_con_saldo_vip %}
+                <span style="background:#3498db;color:white;padding:4px 8px;border-radius:4px;font-size:11px;font-weight:600;">
+                  Saldo VIP
+                </span>
+              {% else %}
+                <span style="background:#95a5a6;color:white;padding:4px 8px;border-radius:4px;font-size:11px;font-weight:600;">
+                  {{ boleto.get_metodo_pago_display }}
+                </span>
+              {% endif %}
+            </td>
+            <td style="padding:12px;">
+              <small>{{ boleto.fecha_compra|date:"d/m/Y H:i" }}</small>
+            </td>
+            <td style="padding:12px;">
+              <small>{{ boleto.vendido_por.get_full_name|default:"Sistema" }}</small>
+            </td>
+            <td style="padding:12px;text-align:center;">
+              <a href="{% url 'factura_ver' boleto.pk %}" class="btn btn-xs btn-primary" style="padding:4px 8px;font-size:11px;" title="Ver factura">
+                📄 Ver
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div style="text-align:center;padding:40px;color:#7f8c8d;">
+        <div style="font-size:48px;margin-bottom:10px;">🎟️</div>
+        <p>No hay boletos vendidos para este evento.</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- INFORMACIÓN DEL EVENTO -->
+  <div class="card" style="margin-top:20px;">
+    <div class="card-header">
+      <h3>Información del Evento</h3>
+    </div>
+    <div class="card-body">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px;">
+        <div>
+          <div style="font-size:12px;color:#7f8c8d;text-transform:uppercase;font-weight:600;margin-bottom:5px;">Evento</div>
+          <div style="font-size:14px;color:#2c3e50;">{{ evento.nombre }}</div>
+        </div>
+        <div>
+          <div style="font-size:12px;color:#7f8c8d;text-transform:uppercase;font-weight:600;margin-bottom:5px;">Equipos</div>
+          <div style="font-size:14px;color:#2c3e50;">{{ evento.equipo_local }} vs {{ evento.equipo_visitante }}</div>
+        </div>
+        <div>
+          <div style="font-size:12px;color:#7f8c8d;text-transform:uppercase;font-weight:600;margin-bottom:5px;">Fecha y Hora</div>
+          <div style="font-size:14px;color:#2c3e50;">{{ evento.fecha|date:"d/m/Y" }} a las {{ evento.hora|time:"H:i" }}</div>
+        </div>
+        <div>
+          <div style="font-size:12px;color:#7f8c8d;text-transform:uppercase;font-weight:600;margin-bottom:5px;">Precio Base</div>
+          <div style="font-size:14px;color:#2c3e50;"><strong>{{ evento.precio_base }} Bs</strong></div>
+        </div>
+        <div>
+          <div style="font-size:12px;color:#7f8c8d;text-transform:uppercase;font-weight:600;margin-bottom:5px;">Capacidad</div>
+          <div style="font-size:14px;color:#2c3e50;">{{ evento.capacidad_disponible }} / {{ evento.capacidad_total }}</div>
+        </div>
+        <div>
+          <div style="font-size:12px;color:#7f8c8d;text-transform:uppercase;font-weight:600;margin-bottom:5px;">Estado</div>
+          <div style="font-size:14px;color:#2c3e50;">
+            <span style="background:{% if evento.estado == 'FINALIZADO' %}#27ae60{% elif evento.estado == 'CANCELADO' %}#e74c3c{% elif evento.estado == 'EN_VENTA' %}#3498db{% else %}#f39c12{% endif %};color:white;padding:4px 8px;border-radius:4px;">
+              {{ evento.get_estado_display }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  @media print {
+    .page-header, .btn {
+      display: none !important;
+    }
+    
+    .card {
+      page-break-inside: avoid;
+      box-shadow: none;
+      border: 1px solid #bdc3c7;
+    }
+  }
+  
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  
+  .stat-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  }
+  
+  .stat-icon {
+    font-size: 32px;
+    margin-bottom: 10px;
+  }
+  
+  .stat-value {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 5px;
+  }
+  
+  .stat-label {
+    font-size: 12px;
+    opacity: 0.9;
+    text-transform: uppercase;
+  }
+  
+  .btn-xs {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+</style>
+{% endblock %}

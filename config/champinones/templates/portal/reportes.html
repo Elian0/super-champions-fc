@@ -1,0 +1,202 @@
+{% extends "portal/base_portal.html" %}
+{% block title %}Reportes y Cierre de Caja{% endblock %}
+{% block nav_reportes %}active{% endblock %}
+{% block content %}
+<div class="page">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Reportes y Cierre de Caja</div>
+      <div class="page-sub">Resumen del día: {{ resumen.fecha|date:"d/m/Y" }}</div>
+    </div>
+  </div>
+  {% for msg in messages %}<div class="alert alert-{{ msg.tags }}" style="margin-bottom:16px;">{{ msg }}</div>{% endfor %}
+
+  <div class="stats-grid">
+    <div class="stat-card blue">
+      <div class="stat-icon"></div>
+      <div class="stat-value">{{ resumen.cantidad_boletos }}</div>
+      <div class="stat-label">Boletos Vendidos</div>
+    </div>
+    <div class="stat-card gold">
+      <div class="stat-icon"></div>
+      <div class="stat-value">{{ resumen.cantidad_recargas }}</div>
+      <div class="stat-label">Recargas Aprobadas</div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-icon"></div>
+      <div class="stat-value">{{ resumen.total_boletos }}</div>
+      <div class="stat-label">Bs. por Boletos</div>
+    </div>
+    <div class="stat-card red">
+      <div class="stat-icon"></div>
+      <div class="stat-value">{{ resumen.total_general }}</div>
+      <div class="stat-label">Total General (BOB)</div>
+    </div>
+  </div>
+
+  <div class="dash-grid" style="margin-bottom:24px;">
+    <div class="card">
+      <div class="card-header"><span class="card-title">🎟 Detalle de Boletos del Día</span></div>
+      <div class="card-body" style="padding:0;">
+        <table>
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Partido</th>
+              <th>Sector</th>
+              <th>Precio (Bs)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for b in resumen.detalle_boletos %}
+            <tr>
+              <td><code style="color:var(--accent-cyan);font-size:11px;">#{{ b.codigo }}</code></td>
+              <td style="font-size:12px;">{{ b.evento.equipo_local }} vs {{ b.evento.equipo_visitante }}</td>
+              <td><span class="badge badge-blue">{{ b.get_sector_display }}</span></td>
+              <td><strong style="color:var(--accent-gold);">{{ b.precio_pagado }}</strong></td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="4">
+                <div class="empty-state" style="padding:24px;">
+                  <p>Sin boletos vendidos hoy.</p>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">💳 Detalle de Recargas del Día</span></div>
+      <div class="card-body" style="padding:0;">
+        <table>
+          <thead>
+            <tr>
+              <th>Miembro</th>
+              <th>Monto (Bs)</th>
+              <th>Método</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in resumen.detalle_recargas %}
+            <tr>
+              <td>{{ r.miembro.nombre_completo }}</td>
+              <td><strong style="color:var(--accent-green);">{{ r.monto }}</strong></td>
+              <td>{{ r.get_metodo_pago_display }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="3">
+                <div class="empty-state" style="padding:24px;">
+                  <p>Sin recargas aprobadas hoy.</p>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel de Cierre -->
+  <div class="card"
+    style="border-color:{% if cierre_hoy %}rgba(34,214,122,.3){% else %}rgba(240,192,64,.3){% endif %};">
+    <div class="card-header"
+      style="background:{% if cierre_hoy %}rgba(34,214,122,.06){% else %}rgba(240,192,64,.06){% endif %};">
+      <span class="card-title">🔒 Cierre de Caja — {{ resumen.fecha|date:"d/m/Y" }}</span>
+    </div>
+    <div class="card-body">
+      {% if cierre_hoy %}
+      <div class="alert alert-success" style="display:flex;">
+        ✅ Caja cerrada el {{ cierre_hoy.fecha_cierre|date:"d/m/Y" }} a las {{ cierre_hoy.fecha_cierre|time:"H:i" }}
+        por <strong style="margin-left:4px;">{{ cierre_hoy.usuario_cierre.get_full_name }}</strong>.
+        Total recaudado: <strong style="color:var(--accent-gold);margin-left:4px;">{{ cierre_hoy.total_recaudado }}
+          Bs</strong>
+      </div>
+      {% else %}
+      <div style="margin-bottom:20px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px;">
+          <div
+            style="text-align:center;padding:16px;background:var(--bg-card2);border-radius:10px;border:1px solid var(--border);">
+            <div
+              style="font-size:11px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">
+              Por Boletos</div>
+            <div style="font-family:'Bebas Neue',cursive;font-size:28px;color:var(--accent-cyan);">{{
+              resumen.total_boletos }} Bs</div>
+          </div>
+          <div
+            style="text-align:center;padding:16px;background:var(--bg-card2);border-radius:10px;border:1px solid var(--border);">
+            <div
+              style="font-size:11px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">
+              Por Recargas</div>
+            <div style="font-family:'Bebas Neue',cursive;font-size:28px;color:var(--accent-green);">{{
+              resumen.total_recargas }} Bs</div>
+          </div>
+          <div
+            style="text-align:center;padding:16px;background:rgba(240,192,64,.06);border-radius:10px;border:1px solid rgba(240,192,64,.25);">
+            <div
+              style="font-size:11px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">
+              Total General</div>
+            <div style="font-family:'Bebas Neue',cursive;font-size:28px;color:var(--accent-gold);">{{
+              resumen.total_general }} Bs</div>
+          </div>
+        </div>
+        <form method="post">
+          {% csrf_token %}
+          <div class="form-group-inner" style="margin-bottom:16px;">
+            <label>Notas del Cierre</label>
+            <textarea name="notas" class="form-input" rows="3" placeholder="Observaciones del turno..."></textarea>
+          </div>
+          <button type="submit" class="btn btn-warning" style="font-size:15px;padding:12px 28px;">🔒 Cerrar Caja del Día
+            ({{ resumen.total_general }} Bs)</button>
+        </form>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Historial de Cierres -->
+  <div class="card" style="margin-top:24px;">
+    <div class="card-header"><span class="card-title">📋 Historial de Cierres</span></div>
+    <div class="card-body" style="padding:0;">
+      <table>
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Total (Bs)</th>
+            <th>Boletos</th>
+            <th>Recargas</th>
+            <th>Cerrado por</th>
+            <th>Hora</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in historial_cierres %}
+          <tr>
+            <td><strong>{{ c.fecha|date:"d/m/Y" }}</strong></td>
+            <td><strong style="color:var(--accent-gold);">{{ c.total_recaudado }}</strong></td>
+            <td>{{ c.cantidad_boletos }}</td>
+            <td>{{ c.cantidad_recargas }}</td>
+            <td>{{ c.usuario_cierre.get_full_name }}</td>
+            <td style="font-size:12px;color:var(--text-secondary);">{% if c.fecha_cierre %}{{ c.fecha_cierre|time:"H:i" }}{% else %}—{% endif %}</td>
+            <td><span class="badge {% if c.estado == 'CERRADO' %}badge-green{% else %}badge-gold{% endif %}">{{ c.get_estado_display }}</span></td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="7">
+              <div class="empty-state" style="padding:24px;">
+                <p>No hay cierres registrados aún.</p>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,247 @@
+{% extends "portal/base_portal.html" %}
+{% block title %}Ventas — Super Champiñones FC{% endblock %}
+{% block nav_ventas %}active{% endblock %}
+{% block content %}
+<div class="page">
+  <div class="page-header">
+    <div><div class="page-title">Ventas de Boletos</div><div class="page-sub">Historial de boletos vendidos</div></div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <a href="{% url 'apertura_caja' %}" class="btn btn-warning">🔓 Abrir Caja</a>
+      {% if request.user.es_admin or request.user.es_personal %}
+      <button class="btn btn-danger" onclick="cerrarCajaVentas()">🔒 Cerrar Caja</button>
+      {% endif %}
+      <button class="btn btn-success" onclick="openModal('modal-venta')">➕ Nueva Venta</button>
+    </div>
+  </div>
+  {% for msg in messages %}<div class="alert alert-{{ msg.tags }}" style="margin-bottom:16px;">{{ msg }}</div>{% endfor %}
+
+  <div class="card">
+    <div class="card-body" style="padding:0;">
+      <table>
+        <thead><tr><th>Código</th><th>Partido</th><th>Miembro / Cliente</th><th>Sector</th><th>Precio (Bs)</th><th>Pago</th><th>Fecha</th></tr></thead>
+        <tbody>
+          {% for b in boletos %}
+          <tr>
+            <td><code style="color:var(--accent-cyan);font-size:12px;">#{{ b.codigo }}</code></td>
+            <td><strong>{{ b.evento.equipo_local }}</strong> vs <strong>{{ b.evento.equipo_visitante }}</strong><br><span style="font-size:11px;color:var(--text-secondary);">{{ b.evento.fecha|date:"d/m/Y" }}</span></td>
+            <td>{% if b.miembro_vip %}<span class="vip-badge">⭐ VIP</span> {{ b.miembro_vip.nombre_completo }}{% else %}<span style="color:var(--text-secondary);">Público General</span>{% endif %}</td>
+            <td><span class="badge badge-blue">{{ b.get_sector_display }}</span></td>
+            <td><strong style="color:var(--accent-gold);">{{ b.precio_pagado }}</strong></td>
+            <td>{% if b.pago_con_saldo_vip %}<span class="badge badge-gold">💳 Saldo VIP</span>{% else %}<span class="badge badge-green">💵 Efectivo</span>{% endif %}</td>
+            <td style="font-size:12px;color:var(--text-secondary);">{{ b.fecha_compra|date:"d/m/Y H:i" }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="7"><div class="empty-state"><div class="empty-state-icon">🎟</div><p>No hay boletos vendidos aún.</p></div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {% if is_paginated %}
+  <div style="display:flex;gap:8px;margin-top:16px;align-items:center;">
+    {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}" class="btn btn-sm btn-outline">← Anterior</a>{% endif %}
+    <span style="color:var(--text-secondary);font-size:13px;">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}" class="btn btn-sm btn-outline">Siguiente →</a>{% endif %}
+  </div>
+  {% endif %}
+</div>
+
+<!-- Modal Nueva Venta -->
+<div class="modal-overlay" id="modal-venta">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">🎟 Nueva Venta de Boleto</span><button class="modal-close" onclick="closeModal('modal-venta')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group-inner">
+          <label>Partido / Evento *</label>
+          <select id="v-evento" class="form-input" onchange="actualizarPrecioPorSector()">
+            <option value="">-- Seleccionar partido --</option>
+            {% for e in eventos_disponibles %}
+            <option value="{{ e.pk }}" data-precio="{{ e.precio_base }}">{{ e.equipo_local }} vs {{ e.equipo_visitante }} — {{ e.fecha|date:"d/m/Y" }} ({{ e.capacidad_disponible }} disp.)</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="form-row cols-2">
+        <div class="form-group-inner">
+          <label>Miembro VIP (opcional)</label>
+          <select id="v-miembro" class="form-input">
+            <option value="">Sin membresía (Público)</option>
+            {% for m in miembros_activos %}
+            <option value="{{ m.pk }}" data-saldo="{{ m.saldo }}">{{ m.nombre_completo }} ({{ m.saldo }} Bs)</option>
+            {% endfor %}
+          </select>
+        </div>
+          <div class="form-group-inner">
+            <label>Sector</label>
+            <select id="v-sector" class="form-input" onchange="actualizarPrecioPorSector()">
+              <option value="GENERAL">General</option>
+              <option value="PREFERENTE">Preferente</option>
+              <option value="VIP">VIP</option>
+              <option value="PALCO">Palco</option>
+            </select>
+          </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group-inner">
+          <label>Precio (BOB) *</label>
+          <input type="number" id="v-precio" class="form-input" step="0.01" min="0" placeholder="0.00" readonly>
+        </div>
+      </div>
+      <div id="v-saldo-info" style="display:none;padding:12px;background:rgba(240,192,64,.08);border:1px solid rgba(240,192,64,.2);border-radius:8px;font-size:13px;color:var(--text-secondary);">
+        💳 Saldo disponible VIP: <strong id="v-saldo-val" style="color:var(--accent-gold);"></strong> Bs
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-venta')">Cancelar</button>
+      <button class="btn btn-success" onclick="procesarVenta()">🎟 Vender Boleto</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Ticket/Recibo -->
+<div class="modal-overlay" id="modal-ticket">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">🎟 Boleto Generado</span><button class="modal-close" onclick="closeModal('modal-ticket')">✕</button></div>
+    <div class="modal-body" id="ticket-content"></div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="window.print()">🖨 Imprimir</button>
+      <button class="btn btn-outline" onclick="closeModal('modal-ticket');location.reload();">Cerrar</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+function actualizarPrecio(){
+  const sel = document.getElementById('v-evento');
+  const opt = sel.options[sel.selectedIndex];
+  document.getElementById('v-precio').value = opt.dataset.precio || '';
+}
+document.getElementById('v-miembro').addEventListener('change', function(){
+  const opt = this.options[this.selectedIndex];
+  const info = document.getElementById('v-saldo-info');
+  if(opt.dataset.saldo !== undefined && this.value){
+    document.getElementById('v-saldo-val').textContent = opt.dataset.saldo;
+    info.style.display = 'block';
+  } else {
+    info.style.display = 'none';
+  }
+});
+async function procesarVenta(){
+  const evento = document.getElementById('v-evento').value;
+  const miembro = document.getElementById('v-miembro').value;
+  const sector = document.getElementById('v-sector').value;
+  const precio = document.getElementById('v-precio').value;
+  if(!evento){toast('error','⚠️ Selecciona un partido');return;}
+  if(!precio){toast('error','⚠️ Ingresa el precio');return;}
+  try{
+    const r = await fetch("{% url 'venta_crear' %}",{
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-CSRFToken':'{{ csrf_token }}'},
+      body: JSON.stringify({evento, miembro_vip: miembro||null, sector, precio_pagado: precio})
+    });
+    const d = await r.json();
+    if(d.ok){
+      const b = d.boleto;
+      document.getElementById('ticket-content').innerHTML = `
+        <div class="ticket">
+          <div class="ticket-header">
+            <div class="ticket-club">⚽ Super Champiñones FC</div>
+            <div class="ticket-address">Estadio Municipal de Bolivia</div>
+            <div class="ticket-num">Código: #${b.codigo}</div>
+          </div>
+          <div class="ticket-match">
+            <div class="ticket-team"><div class="ticket-shield" style="background:linear-gradient(135deg,#1a6fdc,#0a3a8a);">⚽</div><div class="ticket-team-name">${b.equipo_local}</div></div>
+            <div class="ticket-vs">VS</div>
+            <div class="ticket-team"><div class="ticket-shield" style="background:linear-gradient(135deg,#e03b3b,#8a1a1a);">⚽</div><div class="ticket-team-name">${b.equipo_visitante}</div></div>
+          </div>
+          <div class="ticket-info">
+            <div class="ticket-row"><span class="ticket-row-key">Fecha</span><span class="ticket-row-val">${b.fecha}</span></div>
+            <div class="ticket-row"><span class="ticket-row-key">Hora</span><span class="ticket-row-val">${b.hora}</span></div>
+            <div class="ticket-row"><span class="ticket-row-key">Titular</span><span class="ticket-row-val">${b.miembro}</span></div>
+            ${b.ci !== '—' ? `<div class="ticket-row"><span class="ticket-row-key">CI</span><span class="ticket-row-val">${b.ci}</span></div>` : ''}
+            <div class="ticket-row"><span class="ticket-row-key">Precio</span><span class="ticket-row-val" style="color:#1a6fdc;font-size:18px;">${b.precio} Bs</span></div>
+            <div class="ticket-row"><span class="ticket-row-key">Compra</span><span class="ticket-row-val">${b.fecha_compra}</span></div>
+            ${b.saldo_restante ? `<div class="ticket-row"><span class="ticket-row-key">Saldo restante</span><span class="ticket-row-val" style="color:#22d67a;">${b.saldo_restante} Bs</span></div>` : ''}
+          </div>
+          <div class="ticket-sector">${b.sector}</div>
+          <div class="ticket-qr"><div class="qr-box">${b.codigo}</div><div style="font-size:11px;color:#666;margin-top:8px;">Presenta este código en el ingreso</div></div>
+        </div>`;
+      closeModal('modal-venta');
+      openModal('modal-ticket');
+      toast('success','🎟 Boleto vendido: #' + b.codigo);
+    } else {
+      toast('error','⚠️ ' + (d.error || 'Error al procesar'));
+    }
+  } catch(e){toast('error','❌ Error de conexión: ' + e.message);}
+}
+async function actualizarPrecioPorSector(){
+  const evento = document.getElementById('v-evento').value;
+  const sector = document.getElementById('v-sector').value;
+  const precioInput = document.getElementById('v-precio');
+  if(!evento){
+    precioInput.value = '';
+    return;
+  }
+  try{
+    const url = new URL("{% url 'venta_sector_precio' %}", window.location.origin);
+    url.searchParams.set('evento', evento);
+    url.searchParams.set('sector', sector);
+    const r = await fetch(url.toString(),{headers:{'X-CSRFToken':'{{ csrf_token }}'}});
+    const d = await r.json();
+    if(d.ok && d.precio){
+      precioInput.value = d.precio;
+      precioInput.readOnly = true;
+    } else {
+      precioInput.value = '';
+    }
+  }catch(e){
+    console.warn('No se pudo obtener precio por sector',e);
+    precioInput.value = '';
+  }
+}
+
+async function cerrarCajaVentas(){
+  try{
+    const formData = new URLSearchParams();
+    formData.append('notas', 'Cierre automático desde Ventas');
+    const response = await fetch("{% url 'cierre_caja' %}", {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'X-CSRFToken': '{{ csrf_token }}',
+        'X-Requested-With': 'XMLHttpRequest',
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: formData.toString(),
+    });
+    const text = await response.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      toast('error', 'Error al cerrar la caja: respuesta inválida del servidor.');
+      return;
+    }
+    if(data.ok){
+      toast('success', `✔ Caja cerrada: ${data.total} Bs a las ${data.hora}`);
+      setTimeout(()=>{window.location.href = "{% url 'cierre_caja' %}";}, 1200);
+    } else {
+      toast('error', data.error || 'No se pudo cerrar la caja.');
+    }
+  } catch(e){
+    toast('error', 'Error al cerrar la caja: ' + e.message);
+  }
+}
+
+// Pre-seleccionar evento si viene de ?evento=
+const urlParams = new URLSearchParams(window.location.search);
+const eventoParam = urlParams.get('evento');
+if(eventoParam){
+  document.getElementById('v-evento').value = eventoParam;
+  actualizarPrecioPorSector();
+  openModal('modal-venta');
+}
+{% endblock %}

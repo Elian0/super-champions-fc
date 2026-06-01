@@ -1,0 +1,241 @@
+{% extends "portal/base_portal.html" %}
+{% block title %}Partidos — Super Champiñones FC{% endblock %}
+{% block nav_partidos %}active{% endblock %}
+{% block content %}
+<div class="page">
+  <div class="page-header">
+    <div><div class="page-title">⚽ Partidos</div><div class="page-sub">Gestión de eventos deportivos por estado</div></div>
+    <button class="btn btn-primary" onclick="openModal('modal-partido')">➕ Nuevo Partido</button>
+  </div>
+  {% for msg in messages %}<div class="alert alert-{{ msg.tags }}" style="margin-bottom:16px;">{{ msg }}</div>{% endfor %}
+
+  <!-- Partidos Programados -->
+  {% if partidos_programados %}
+  <div style="margin-bottom: 30px;">
+    <h3 style="margin-bottom: 15px; color: #2c3e50; display: flex; align-items: center; gap: 10px;">
+      <span style="background: #3498db; color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px;">📅</span>
+      Partidos Programados ({{ partidos_programados|length }})
+    </h3>
+    <div class="partidos-grid">
+      {% for e in partidos_programados %}
+      <div class="partido-card">
+        <div class="partido-card-header">
+          <span class="partido-date">{{ e.fecha|date:"d/m/Y" }} {{ e.hora|time:"H:i" }}</span>
+          <span class="badge badge-blue">{{ e.capacidad_disponible }} disp.</span>
+        </div>
+        <div class="partido-body">
+          <div class="team-block">
+            <div class="team-shield" style="background:linear-gradient(135deg,#1a6fdc,#0a3a8a);">⚽</div>
+            <div class="team-name">{{ e.equipo_local }}</div>
+          </div>
+          <span class="vs-badge">VS</span>
+          <div class="team-block">
+            <div class="team-shield" style="background:linear-gradient(135deg,#e03b3b,#8a1a1a);">⚽</div>
+            <div class="team-name">{{ e.equipo_visitante }}</div>
+          </div>
+        </div>
+        <div class="partido-footer">
+          <span style="color:var(--accent-gold);font-family:'Bebas Neue',cursive;font-size:20px;">{{ e.precio_base }} Bs</span>
+          <div class="action-btns">
+            <a href="{% url 'venta_lista' %}?evento={{ e.pk }}" class="btn btn-sm btn-success" title="Vender boleto">🎟 Vender</a>
+            <a href="{% url 'evento_boletos_lista' e.pk %}" class="btn btn-sm btn-info" title="Ver boletos">📊 Boletos</a>
+            <button class="btn btn-sm btn-warning" onclick="cambiarEstado({{ e.pk }})" title="Cambiar estado">⚡ Estado</button>
+            <a href="{% url 'evento_editar' e.pk %}" class="btn btn-sm btn-primary btn-outline">✏ Editar</a>
+            {% if request.user.es_admin %}<a href="{% url 'evento_eliminar' e.pk %}" class="btn btn-sm btn-danger">🗑</a>{% endif %}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Partidos En Curso -->
+  {% if partidos_en_curso %}
+  <div style="margin-bottom: 30px;">
+    <h3 style="margin-bottom: 15px; color: #2c3e50; display: flex; align-items: center; gap: 10px;">
+      <span style="background: #e74c3c; color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; animation: pulse 1s infinite;">🔴</span>
+      En Curso - AHORA ({{ partidos_en_curso|length }})
+    </h3>
+    <div class="partidos-grid">
+      {% for e in partidos_en_curso %}
+      <div class="partido-card" style="border: 2px solid #e74c3c;">
+        <div class="partido-card-header" style="background: #e74c3c; color: white;">
+          <span class="partido-date">⏱ {{ e.hora|time:"H:i" }}</span>
+          <span class="badge" style="background: #c0392b;">EN VIVO</span>
+        </div>
+        <div class="partido-body">
+          <div class="team-block">
+            <div class="team-shield" style="background:linear-gradient(135deg,#1a6fdc,#0a3a8a);">⚽</div>
+            <div class="team-name">{{ e.equipo_local }}</div>
+          </div>
+          <span class="vs-badge">VS</span>
+          <div class="team-block">
+            <div class="team-shield" style="background:linear-gradient(135deg,#e03b3b,#8a1a1a);">⚽</div>
+            <div class="team-name">{{ e.equipo_visitante }}</div>
+          </div>
+        </div>
+        <div class="partido-footer">
+          <span style="color:var(--accent-gold);font-family:'Bebas Neue',cursive;font-size:20px;">{{ e.precio_base }} Bs</span>
+          <div class="action-btns">
+            <button class="btn btn-sm btn-warning" onclick="cambiarEstado({{ e.pk }})" title="Cambiar a Finalizado">✅ Finalizar</button>
+            <a href="{% url 'evento_editar' e.pk %}" class="btn btn-sm btn-primary btn-outline">✏ Editar</a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Partidos Finalizados -->
+  {% if partidos_finalizados %}
+  <div style="margin-bottom: 30px;">
+    <h3 style="margin-bottom: 15px; color: #2c3e50; display: flex; align-items: center; gap: 10px;">
+      <span style="background: #27ae60; color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px;">✅</span>
+      Partidos Finalizados ({{ partidos_finalizados|length }})
+    </h3>
+    <div class="partidos-grid">
+      {% for e in partidos_finalizados %}
+      <div class="partido-card" style="opacity: 0.8;">
+        <div class="partido-card-header" style="background: #27ae60; color: white;">
+          <span class="partido-date">{{ e.fecha|date:"d/m/Y" }}</span>
+          <span class="badge" style="background: #229954;">FINALIZADO</span>
+        </div>
+        <div class="partido-body">
+          <div class="team-block">
+            <div class="team-shield" style="background:linear-gradient(135deg,#1a6fdc,#0a3a8a);">⚽</div>
+            <div class="team-name">{{ e.equipo_local }}</div>
+          </div>
+          <span class="vs-badge">VS</span>
+          <div class="team-block">
+            <div class="team-shield" style="background:linear-gradient(135deg,#e03b3b,#8a1a1a);">⚽</div>
+            <div class="team-name">{{ e.equipo_visitante }}</div>
+          </div>
+        </div>
+        <div class="partido-footer">
+          <span style="color:var(--accent-gold);font-family:'Bebas Neue',cursive;font-size:20px;">{{ e.precio_base }} Bs</span>
+          <div class="action-btns">
+            <a href="{% url 'evento_boletos_lista' e.pk %}" class="btn btn-sm btn-info" title="Ver boletos">📊 Boletos</a>
+            <a href="{% url 'evento_editar' e.pk %}" class="btn btn-sm btn-secondary btn-outline">📖 Ver</a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Sin partidos -->
+  {% if not partidos_programados and not partidos_en_curso and not partidos_finalizados %}
+  <div style="grid-column:1/-1;">
+    <div class="empty-state">
+      <div class="empty-state-icon">⚽</div>
+      <p>No hay partidos registrados.<br>
+        <button onclick="openModal('modal-partido')" style="background:none;border:none;color:var(--accent-cyan);cursor:pointer;font-size:14px;text-decoration:underline;">
+          Crear el primero →
+        </button>
+      </p>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Modal Nuevo Partido -->
+<div class="modal-overlay" id="modal-partido">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title"> Nuevo Partido</span><button class="modal-close" onclick="closeModal('modal-partido')">✕</button></div>
+    <form method="post" action="{% url 'evento_crear' %}">{% csrf_token %}
+      <div class="modal-body">
+        <div class="form-row"><div class="form-group-inner"><label>Nombre del Evento *</label><input type="text" name="nombre" class="form-input" placeholder="Ej: Copa Campeones 2025 — Final"></div></div>
+        <div class="form-row cols-2">
+          <div class="form-group-inner"><label>Equipo Local *</label><input type="text" name="equipo_local" class="form-input" placeholder="Equipo local"></div>
+          <div class="form-group-inner"><label>Equipo Visitante *</label><input type="text" name="equipo_visitante" class="form-input" placeholder="Equipo visitante"></div>
+        </div>
+        <div class="form-row cols-2">
+          <div class="form-group-inner"><label>Fecha *</label><input type="date" name="fecha" class="form-input"></div>
+          <div class="form-group-inner"><label>Hora *</label><input type="time" name="hora" class="form-input"></div>
+        </div>
+        <div class="form-row cols-2">
+          <div class="form-group-inner"><label>Precio Base (BOB) *</label><input type="number" name="precio_base" class="form-input" placeholder="30.00" step="0.01" min="0"></div>
+          <div class="form-group-inner"><label>Capacidad *</label><input type="number" name="capacidad_total" class="form-input" placeholder="500" min="1"></div>
+        </div>
+        <div class="form-row"><div class="form-group-inner"><label>Descripción</label><textarea name="descripcion" class="form-input" rows="2" placeholder="Detalles del partido..."></textarea></div></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModal('modal-partido')">Cancelar</button>
+        <button type="submit" class="btn btn-primary">💾 Crear Partido</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Cambiar Estado -->
+<div class="modal-overlay" id="modal-cambiar-estado">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">⚡ Cambiar Estado del Evento</span><button class="modal-close" onclick="closeModal('modal-cambiar-estado')">✕</button></div>
+    <div class="modal-body">
+      <p style="margin-bottom: 20px; color: #7f8c8d;">Selecciona el nuevo estado para el evento:</p>
+      <div style="display: grid; gap: 10px;">
+        <button class="btn btn-block" style="text-align: left; padding: 12px; background: #f39c12; color: white;" onclick="confirmarCambioEstado('PROGRAMADO')">
+          📋 PROGRAMADO — Evento programado, en espera
+        </button>
+        <button class="btn btn-block" style="text-align: left; padding: 12px; background: #3498db; color: white;" onclick="confirmarCambioEstado('EN_VENTA')">
+          💳 EN VENTA — Boletos disponibles para venta
+        </button>
+        <button class="btn btn-block" style="text-align: left; padding: 12px; background: #e74c3c; color: white;" onclick="confirmarCambioEstado('JUGANDO')">
+          ⚽ JUGANDO — Evento en progreso
+        </button>
+        <button class="btn btn-block" style="text-align: left; padding: 12px; background: #27ae60; color: white;" onclick="confirmarCambioEstado('FINALIZADO')">
+          ✅ FINALIZADO — Evento completado
+        </button>
+        <button class="btn btn-block" style="text-align: left; padding: 12px; background: #95a5a6; color: white;" onclick="confirmarCambioEstado('CANCELADO')">
+          ❌ CANCELADO — Evento cancelado
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let eventoIdTemp = null;
+
+function cambiarEstado(eventoId, estadoActual) {
+  eventoIdTemp = eventoId;
+  openModal('modal-cambiar-estado');
+}
+
+function confirmarCambioEstado(nuevoEstado) {
+  const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+                    document.querySelector('meta[name="csrf-token"]')?.content;
+  
+  fetch(`/partidos/${eventoIdTemp}/cambiar-estado/`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': csrftoken,
+    },
+    body: JSON.stringify({
+      nuevo_estado: nuevoEstado
+    })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.ok) {
+      alert(`✅ Estado actualizado a: ${data.estado_display}`);
+      closeModal('modal-cambiar-estado');
+      // Recargar la página para mostrar los cambios
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
+    } else {
+      alert(`❌ Error: ${data.error}`);
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('❌ Error al cambiar el estado');
+  });
+}
+</script>
+{% endblock %}

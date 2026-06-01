@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Factura {{ factura.numero_factura }}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        @page {
+            size: A4;
+            margin: 1cm;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            border-radius: 8px;
+        }
+        
+        /* HEADER */
+        .factura-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 3px solid #2c3e50;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .empresa-info h1 {
+            color: #2c3e50;
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+        
+        .empresa-info p {
+            color: #7f8c8d;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+        
+        .factura-numero {
+            text-align: right;
+        }
+        
+        .factura-numero h2 {
+            color: #e74c3c;
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+        
+        .factura-numero p {
+            color: #95a5a6;
+            font-size: 11px;
+        }
+        
+        /* CLIENTE Y EVENTO */
+        .info-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #ecf0f1;
+            border-radius: 6px;
+        }
+        
+        .info-block h3 {
+            color: #2c3e50;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 8px;
+        }
+        
+        .info-block p {
+            font-size: 13px;
+            color: #34495e;
+            line-height: 1.8;
+            margin-bottom: 5px;
+        }
+        
+        .info-block strong {
+            color: #2c3e50;
+        }
+        
+        /* DETALLES DEL EVENTO */
+        .evento-detalles {
+            grid-column: 1 / -1;
+        }
+        
+        .evento-detalles h3 {
+            color: #2c3e50;
+        }
+        
+        .evento-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        .evento-item {
+            background: white;
+            padding: 12px;
+            border-left: 4px solid #3498db;
+            border-radius: 4px;
+        }
+        
+        .evento-item-label {
+            font-size: 10px;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .evento-item-value {
+            font-size: 14px;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        
+        /* TABLA DE DETALLES */
+        .detalles-table {
+            width: 100%;
+            margin-bottom: 30px;
+        }
+        
+        .detalles-table th {
+            background: #34495e;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .detalles-table td {
+            padding: 12px;
+            border-bottom: 1px solid #ecf0f1;
+            font-size: 13px;
+            color: #34495e;
+        }
+        
+        .detalles-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .label-campo {
+            color: #7f8c8d;
+            font-weight: 600;
+        }
+        
+        /* TOTALES */
+        .totales-section {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 30px;
+        }
+        
+        .totales-box {
+            width: 350px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 20px;
+            border-bottom: 1px solid #ecf0f1;
+            font-size: 13px;
+        }
+        
+        .total-row.subtotal {
+            color: #34495e;
+        }
+        
+        .total-row.iva {
+            color: #f39c12;
+        }
+        
+        .total-row.descuento {
+            color: #e74c3c;
+        }
+        
+        .total-row.total {
+            background: #2c3e50;
+            color: white;
+            font-weight: 700;
+            font-size: 16px;
+            padding: 15px 20px;
+            border: none;
+        }
+        
+        .total-label {
+            font-weight: 600;
+        }
+        
+        .total-value {
+            font-weight: 700;
+            text-align: right;
+        }
+        
+        /* NOTA Y MÉTODO PAGO */
+        .pago-section {
+            background: #ecf0f1;
+            padding: 20px;
+            border-radius: 6px;
+            margin-bottom: 30px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .pago-item h4 {
+            color: #2c3e50;
+            font-size: 11px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        
+        .pago-item p {
+            color: #34495e;
+            font-size: 13px;
+        }
+        
+        /* FOOTER */
+        .factura-footer {
+            border-top: 1px solid #bdc3c7;
+            padding-top: 20px;
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 11px;
+            margin-top: 30px;
+        }
+        
+        .qr-section {
+            text-align: center;
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 6px;
+        }
+        
+        .qr-section img {
+            max-width: 150px;
+            height: auto;
+        }
+        
+        /* BOTONES */
+        .action-buttons {
+            text-align: center;
+            margin-top: 30px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .btn-print {
+            background: #3498db;
+            color: white;
+        }
+        
+        .btn-print:hover {
+            background: #2980b9;
+        }
+        
+        .btn-back {
+            background: #95a5a6;
+            color: white;
+        }
+        
+        .btn-back:hover {
+            background: #7f8c8d;
+        }
+        
+        /* ESTADO FACTURA */
+        .estado-badge {
+            display: inline-block;
+            background: #27ae60;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+        
+        /* IMPRESIÓN */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            
+            .container {
+                box-shadow: none;
+                border-radius: 0;
+                padding: 0;
+                max-width: 100%;
+            }
+            
+            .action-buttons {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- HEADER -->
+        <div class="factura-header">
+            <div class="empresa-info">
+                <h1>🏟️ {{ empresa.nombre }}</h1>
+                <p><strong>NIT:</strong> {{ empresa.nit }}</p>
+                <p><strong>Actividad:</strong> {{ empresa.actividad }}</p>
+                <p><strong>Dirección:</strong> {{ empresa.direccion }}</p>
+                <p><strong>Teléfono:</strong> {{ empresa.telefono }}</p>
+            </div>
+            <div class="factura-numero">
+                <h2>FACTURA</h2>
+                <p><strong>Nº {{ factura.numero_factura }}</strong></p>
+                <p>Código: {{ factura.codigo_boleto }}</p>
+                <span class="estado-badge">✓ EMITIDA</span>
+            </div>
+        </div>
+
+        <!-- CLIENTE Y DETALLES -->
+        <div class="info-section">
+            <!-- CLIENTE -->
+            <div class="info-block">
+                <h3>Datos del Cliente</h3>
+                <p><strong>Nombre:</strong><br>{{ factura.cliente }}</p>
+                <p><strong>CI/NIT:</strong><br>{{ factura.ci_cliente }}</p>
+            </div>
+
+            <!-- EMISIÓN -->
+            <div class="info-block">
+                <h3>Datos de la Emisión</h3>
+                <p><strong>Fecha:</strong><br>{{ factura.fecha }} {{ factura.hora }}</p>
+                <p><strong>Vendedor:</strong><br>{{ factura.vendido_por }}</p>
+            </div>
+
+            <!-- EVENTO -->
+            <div class="info-block evento-detalles">
+                <h3>🎟️ Evento</h3>
+                <div class="evento-grid">
+                    <div class="evento-item">
+                        <div class="evento-item-label">Partido</div>
+                        <div class="evento-item-value">{{ factura.evento }}</div>
+                    </div>
+                    <div class="evento-item">
+                        <div class="evento-item-label">Equipos</div>
+                        <div class="evento-item-value">{{ factura.equipo_local }}<br>vs<br>{{ factura.equipo_visitante }}</div>
+                    </div>
+                    <div class="evento-item">
+                        <div class="evento-item-label">Fecha y Hora</div>
+                        <div class="evento-item-value">{{ factura.fecha_evento }}<br>{{ factura.hora_evento }}</div>
+                    </div>
+                    <div class="evento-item">
+                        <div class="evento-item-label">Sector</div>
+                        <div class="evento-item-value">{{ factura.sector }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DETALLES DE VENTA -->
+        <table class="detalles-table">
+            <thead>
+                <tr>
+                    <th>Concepto</th>
+                    <th>Cantidad</th>
+                    <th>Valor Unitario</th>
+                    <th>Subtotal</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Boleto de Entrada — {{ factura.sector }}</td>
+                    <td>1</td>
+                    <td>{{ factura.subtotal }} Bs</td>
+                    <td>{{ factura.subtotal }} Bs</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- TOTALES -->
+        <div class="totales-section">
+            <div class="totales-box">
+                <div class="total-row subtotal">
+                    <span class="total-label">Subtotal (BOB):</span>
+                    <span class="total-value">{{ factura.subtotal }} Bs</span>
+                </div>
+                <div class="total-row iva">
+                    <span class="total-label">IVA (13%):</span>
+                    <span class="total-value">+ {{ factura.iva_13 }} Bs</span>
+                </div>
+                {% if factura.descuento != '0.00' %}
+                <div class="total-row descuento">
+                    <span class="total-label">Descuento:</span>
+                    <span class="total-value">- {{ factura.descuento }} Bs</span>
+                </div>
+                {% endif %}
+                <div class="total-row total">
+                    <span class="total-label">TOTAL:</span>
+                    <span class="total-value">{{ factura.total }} Bs</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- MÉTODO DE PAGO -->
+        <div class="pago-section">
+            <div class="pago-item">
+                <h4>💳 Método de Pago</h4>
+                <p><strong>{{ factura.metodo_pago }}</strong></p>
+                {% if factura.referencia_pago != 'N/A' %}
+                <p><small>Referencia: {{ factura.referencia_pago }}</small></p>
+                {% endif %}
+            </div>
+            <div class="pago-item">
+                <h4>📋 Información Adicional</h4>
+                <p><small>Boleto válido para una sola entrada.<br>No es transferible ni canjeable por dinero.</small></p>
+            </div>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="factura-footer">
+            <p>Esta factura fue generada automáticamente por el Sistema de Gestión de Super Champiñones FC.</p>
+            <p>Para consultas, contacte con administración.</p>
+            <p style="margin-top: 10px; border-top: 1px solid #bdc3c7; padding-top: 10px;">
+                Generado el {{ factura.fecha }} a las {{ factura.hora }}
+            </p>
+        </div>
+
+        <!-- BOTONES DE ACCIÓN -->
+        <div class="action-buttons">
+            <button class="btn btn-print" onclick="window.print()">🖨️ Imprimir</button>
+            <a href="{% url 'venta_lista' %}" class="btn btn-back">← Volver</a>
+        </div>
+    </div>
+
+    <script>
+        // Auto-print si viene con parámetro print=1
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('print') === '1') {
+            window.addEventListener('load', () => {
+                setTimeout(() => window.print(), 500);
+            });
+        }
+    </script>
+</body>
+</html>

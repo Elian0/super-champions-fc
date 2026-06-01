@@ -1,0 +1,312 @@
+{% extends "base.html" %}
+{% block title %}Portal VIP — Super Champiñones FC{% endblock %}
+
+{% block nav %}
+<nav class="vip-nav">
+  <div class="vip-nav-brand">
+    <div class="vip-nav-icon">⭐</div>
+    <div class="vip-nav-title">Super Champiñones FC</div>
+  </div>
+  <div class="vip-nav-links">
+    <a class="vip-nav-link active" href="#sec-inicio" onclick="showSec('inicio',this)">🏠 Inicio</a>
+    <a class="vip-nav-link" href="#sec-partidos" onclick="showSec('partidos',this)">⚽ Partidos</a>
+    <a class="vip-nav-link" href="#sec-boletos" onclick="showSec('boletos',this)">🎟 Mis Boletos</a>
+    <a class="vip-nav-link" href="#sec-recargar" onclick="showSec('recargar',this)">💳 Recargar</a>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div class="vip-user-chip">
+      <div class="vip-avatar">{{ miembro.nombre_completo|first|upper }}</div>
+      <div class="user-info">
+        <div class="user-name" style="font-size:13px;">{{ miembro.nombre_completo }}</div>
+        <div style="color:var(--accent-gold);font-size:10px;text-transform:uppercase;letter-spacing:.5px;">⭐ Miembro VIP</div>
+      </div>
+    </div>
+    <form method="post" action="{% url 'logout' %}" style="display:inline">
+      {% csrf_token %}
+      <button type="submit" class="btn-logout">⬅ Salir</button>
+    </form>
+  </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div style="position:relative;z-index:10;">
+
+<!-- SECCIÓN INICIO -->
+<div id="sec-inicio" class="vip-page" style="display:block;padding:36px 32px;animation:fadeIn .3s ease;">
+  <div class="vip-welcome">
+    <div class="vip-welcome-title">¡Hola, {{ miembro.nombre_completo.split.0 }}!</div>
+    <div class="vip-welcome-sub">Miembro VIP · CI: {{ miembro.ci_completo }}</div>
+    <div class="vip-saldo-display">
+      <div>
+        <div class="vip-saldo-label">Saldo Disponible</div>
+        <div class="vip-saldo-amount" id="saldo-display">{{ miembro.saldo }}</div>
+      </div>
+      <div style="font-size:28px;color:var(--accent-gold);">Bs</div>
+    </div>
+  </div>
+
+  <div class="vip-stats">
+    <div class="vip-stat">
+      <div class="vip-stat-val">{{ mis_boletos|length }}</div>
+      <div class="vip-stat-label">Boletos Comprados</div>
+    </div>
+    <div class="vip-stat">
+      <div class="vip-stat-val">{{ eventos|length }}</div>
+      <div class="vip-stat-label">Partidos Disponibles</div>
+    </div>
+    <div class="vip-stat">
+      <div class="vip-stat-val" style="color:var(--accent-gold);">{{ miembro.saldo }}</div>
+      <div class="vip-stat-label">Saldo en BOB</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><span class="card-title">⚽ Próximos Partidos</span><button class="btn btn-sm btn-outline" onclick="showSec('partidos',null)">Ver todos →</button></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px;padding:22px;">
+      {% for e in eventos|slice:":3" %}
+      <div class="vip-partido-card">
+        <div class="vip-partido-header">
+          <span class="vip-partido-date">📅 {{ e.fecha|date:"d/m/Y" }} {{ e.hora|time:"H:i" }}</span>
+          <span class="badge {% if e.agotado %}badge-red{% else %}badge-green{% endif %}">{% if e.agotado %}Agotado{% else %}Disponible{% endif %}</span>
+        </div>
+        <div class="vip-partido-body">
+          <div class="team-block"><div class="team-shield" style="background:linear-gradient(135deg,#1a6fdc,#0a3a8a);">⚽</div><div class="team-name">{{ e.equipo_local }}</div></div>
+          <span class="vs-badge">VS</span>
+          <div class="team-block"><div class="team-shield" style="background:linear-gradient(135deg,#e03b3b,#8a1a1a);">⚽</div><div class="team-name">{{ e.equipo_visitante }}</div></div>
+        </div>
+        <div class="vip-partido-footer">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-family:'Bebas Neue',cursive;font-size:22px;color:var(--accent-gold);">{{ e.precio_base }} Bs</span>
+            {% if not e.agotado %}
+            <button class="btn btn-sm btn-success" onclick="abrirCompra({{ e.pk }}, '{{ e.equipo_local|escapejs }}', '{{ e.equipo_visitante|escapejs }}', {{ e.precio_base }}, '{{ e.fecha|date:"d/m/Y" }}', '{{ e.hora|time:"H:i" }}')">🎟 Comprar</button>
+            {% else %}
+            <button class="btn btn-sm btn-outline" disabled>Sin entradas</button>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <div style="grid-column:1/-1;"><div class="empty-state"><div class="empty-state-icon">⚽</div><p>No hay partidos disponibles.</p></div></div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- SECCIÓN PARTIDOS -->
+<div id="sec-partidos" class="vip-page" style="display:none;padding:36px 32px;animation:fadeIn .3s ease;">
+  <div style="margin-bottom:24px;"><div class="page-title">⚽ Partidos Disponibles</div></div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:22px;">
+    {% for e in eventos %}
+    <div class="vip-partido-card">
+      <div class="vip-partido-header">
+        <span class="vip-partido-date">📅 {{ e.fecha|date:"d/m/Y" }} {{ e.hora|time:"H:i" }}</span>
+        <span class="badge {% if e.agotado %}badge-red{% else %}badge-green{% endif %}">{% if e.agotado %}Agotado{% else %}{{ e.capacidad_disponible }} disp.{% endif %}</span>
+      </div>
+      <div class="vip-partido-body">
+        <div class="team-block"><div class="team-shield" style="background:linear-gradient(135deg,#1a6fdc,#0a3a8a);">⚽</div><div class="team-name">{{ e.equipo_local }}</div></div>
+        <span class="vs-badge">VS</span>
+        <div class="team-block"><div class="team-shield" style="background:linear-gradient(135deg,#e03b3b,#8a1a1a);">⚽</div><div class="team-name">{{ e.equipo_visitante }}</div></div>
+      </div>
+      <div class="vip-partido-footer">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-family:'Bebas Neue',cursive;font-size:22px;color:var(--accent-gold);">{{ e.precio_base }} Bs</span>
+          {% if not e.agotado %}
+          <button class="btn btn-sm btn-success" onclick="abrirCompra({{ e.pk }}, '{{ e.equipo_local|escapejs }}', '{{ e.equipo_visitante|escapejs }}', {{ e.precio_base }}, '{{ e.fecha|date:"d/m/Y" }}', '{{ e.hora|time:"H:i" }}')">🎟 Comprar</button>
+          {% else %}
+          <button class="btn btn-sm btn-outline" disabled>Sin entradas</button>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <div style="grid-column:1/-1;"><div class="empty-state"><div class="empty-state-icon">⚽</div><p>No hay partidos disponibles por el momento.</p></div></div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- SECCIÓN MIS BOLETOS -->
+<div id="sec-boletos" class="vip-page" style="display:none;padding:36px 32px;animation:fadeIn .3s ease;">
+  <div style="margin-bottom:24px;"><div class="page-title">🎟 Mis Boletos</div></div>
+  {% for b in mis_boletos %}
+  <div class="boleto-card">
+    <div class="boleto-icon">🎟</div>
+    <div class="boleto-info">
+      <div class="boleto-match">{{ b.evento.equipo_local }} vs {{ b.evento.equipo_visitante }}</div>
+      <div class="boleto-meta">
+        📅 {{ b.evento.fecha|date:"d/m/Y" }}
+        &nbsp;·&nbsp;
+        <span class="badge badge-gold" style="font-size:10px;">{{ b.get_sector_display }}</span>
+        &nbsp;·&nbsp;
+        <code style="font-size:11px;color:var(--accent-cyan);">#{{ b.codigo }}</code>
+        &nbsp;·&nbsp;
+        {{ b.fecha_compra|date:"d/m/Y H:i" }}
+      </div>
+    </div>
+    <div style="text-align:right;">
+      <div class="boleto-price">{{ b.precio_pagado }} Bs</div>
+      {% if b.pago_con_saldo_vip %}<div style="font-size:11px;color:var(--accent-gold);">💳 Saldo VIP</div>{% endif %}
+    </div>
+  </div>
+  {% empty %}
+  <div class="empty-state"><div class="empty-state-icon">🎟</div><p>No has comprado boletos aún.<br><button onclick="showSec('partidos',null)" style="background:none;border:none;color:var(--accent-cyan);cursor:pointer;font-size:14px;">Ver partidos disponibles →</button></p></div>
+  {% endfor %}
+</div>
+
+<!-- SECCIÓN RECARGAR -->
+<div id="sec-recargar" class="vip-page" style="display:none;padding:36px 32px;animation:fadeIn .3s ease;">
+  <div style="margin-bottom:24px;"><div class="page-title">💳 Recargar Saldo</div></div>
+  <div style="max-width:480px;">
+    <div class="saldo-card" style="margin-bottom:24px;">
+      <div class="saldo-icon">💰</div>
+      <div><div class="saldo-label">Saldo Actual</div><div class="saldo-value" id="saldo-recarga">{{ miembro.saldo }} Bs</div></div>
+    </div>
+    <div class="card">
+      <div class="card-body">
+        <div style="font-size:11px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">Montos Rápidos</div>
+        <div class="recarga-grid" style="margin-bottom:20px;">
+          <button class="recarga-preset" onclick="setRecargaMonto(20,this)">20</button>
+          <button class="recarga-preset" onclick="setRecargaMonto(50,this)">50</button>
+          <button class="recarga-preset" onclick="setRecargaMonto(100,this)">100</button>
+          <button class="recarga-preset" onclick="setRecargaMonto(200,this)">200</button>
+        </div>
+        <div class="form-row cols-2">
+          <div class="form-group-inner"><label>Monto Personalizado (BOB)</label><input type="number" id="rec-monto" class="form-input" placeholder="Min. 10 Bs" step="0.01" min="10"></div>
+          <div class="form-group-inner"><label>Método de Pago</label>
+            <select id="rec-metodo" class="form-input">
+              <option value="EFECTIVO">Efectivo</option>
+              <option value="TRANSFERENCIA">Transferencia Bancaria</option>
+              <option value="QR">Pago QR</option>
+            </select>
+          </div>
+        </div>
+        <div style="background:rgba(240,192,64,.06);border:1px solid rgba(240,192,64,.15);border-radius:8px;padding:12px;margin-bottom:16px;font-size:12px;color:var(--text-secondary);">
+          ℹ️ Tu solicitud quedará pendiente hasta que el personal confirme el pago.
+        </div>
+        <button class="btn btn-warning" style="width:100%;padding:14px;" onclick="solicitarRecarga()">💳 Solicitar Recarga</button>
+        <div id="rec-msg" style="display:none;margin-top:12px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- end z-index wrapper -->
+
+<!-- Modal Compra -->
+<div class="modal-overlay" id="modal-compra">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">🎟 Comprar Boleto</span><button class="modal-close" onclick="closeModal('modal-compra')">✕</button></div>
+    <div class="modal-body">
+      <div id="compra-partido-info" style="padding:16px;background:rgba(26,111,220,.08);border:1px solid rgba(26,111,220,.2);border-radius:10px;margin-bottom:20px;text-align:center;"></div>
+      <div class="form-row">
+        <div class="form-group-inner"><label>Sector</label>
+          <select id="compra-sector" class="form-input">
+            <option value="GENERAL">🟢 General</option>
+            <option value="PREFERENTE">🔵 Preferente</option>
+            <option value="VIP">⭐ VIP</option>
+            <option value="PALCO">🏆 Palco</option>
+          </select>
+        </div>
+      </div>
+      <div style="padding:14px;background:rgba(240,192,64,.08);border:1px solid rgba(240,192,64,.2);border-radius:8px;font-size:13px;">
+        💳 Tu saldo: <strong style="color:var(--accent-gold);" id="compra-saldo">{{ miembro.saldo }} Bs</strong>
+        &nbsp;·&nbsp;
+        Precio: <strong style="color:var(--accent-cyan);" id="compra-precio-txt">0 Bs</strong>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-compra')">Cancelar</button>
+      <button class="btn btn-success" onclick="confirmarCompra()">✅ Confirmar Compra</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Ticket VIP -->
+<div class="modal-overlay" id="modal-ticket-vip">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">🎟 ¡Tu Boleto!</span><button class="modal-close" onclick="closeModal('modal-ticket-vip')">✕</button></div>
+    <div class="modal-body" id="ticket-vip-content"></div>
+    <div class="modal-footer"><button class="btn btn-primary" onclick="window.print()">🖨 Imprimir</button><button class="btn btn-outline" onclick="closeModal('modal-ticket-vip');location.reload();">Cerrar</button></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+let compraEventoId = null, compraPrecio = 0;
+
+function showSec(name, link){
+  document.querySelectorAll('.vip-page').forEach(s=>s.style.display='none');
+  document.getElementById('sec-'+name).style.display='block';
+  document.querySelectorAll('.vip-nav-link').forEach(l=>l.classList.remove('active'));
+  if(link) link.classList.add('active');
+  else document.querySelector(`[onclick*="'${name}'"]`)?.classList.add('active');
+}
+function setRecargaMonto(m,el){
+  document.getElementById('rec-monto').value=m;
+  document.querySelectorAll('.recarga-preset').forEach(b=>b.classList.remove('selected'));
+  el.classList.add('selected');
+}
+async function solicitarRecarga(){
+  const monto = parseFloat(document.getElementById('rec-monto').value);
+  const metodo = document.getElementById('rec-metodo').value;
+  const msg = document.getElementById('rec-msg');
+  if(!monto||monto<10){toast('error','⚠️ Monto mínimo 10 Bs');return;}
+  try{
+    const r = await fetch("{% url 'vip_recargar' %}",{
+      method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':'{{ csrf_token }}'},
+      body: JSON.stringify({monto, metodo_pago: metodo})
+    });
+    const d = await r.json();
+    if(d.ok){
+      msg.style.display='block';
+      msg.innerHTML='<div class="alert alert-success">✅ Solicitud enviada. El personal la procesará en breve.</div>';
+      toast('success','💳 Solicitud de recarga enviada');
+    } else {
+      toast('error','⚠️ '+(d.error||'Error al solicitar'));
+    }
+  }catch(e){toast('error','❌ Error de conexión');}
+}
+function abrirCompra(id, local, visita, precio, fecha, hora){
+  compraEventoId=id; compraPrecio=precio;
+  document.getElementById('compra-partido-info').innerHTML=`<strong style="font-size:16px;">${local} vs ${visita}</strong><br><span style="font-size:12px;color:var(--text-secondary);">📅 ${fecha} ${hora}</span>`;
+  document.getElementById('compra-precio-txt').textContent=precio+' Bs';
+  openModal('modal-compra');
+}
+async function confirmarCompra(){
+  const sector = document.getElementById('compra-sector').value;
+  try{
+    const r = await fetch("{% url 'vip_comprar' %}",{
+      method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':'{{ csrf_token }}'},
+      body: JSON.stringify({evento_id: compraEventoId, sector})
+    });
+    const d = await r.json();
+    if(d.ok){
+      const b=d.boleto;
+      document.getElementById('saldo-display').textContent=b.saldo_restante;
+      document.getElementById('compra-saldo').textContent=b.saldo_restante+' Bs';
+      document.getElementById('ticket-vip-content').innerHTML=`
+        <div class="ticket">
+          <div class="ticket-header"><div class="ticket-club">⚽ Super Champiñones FC</div><div class="ticket-num">Código: #${b.codigo}</div></div>
+          <div class="ticket-match">
+            <div class="ticket-team"><div class="ticket-shield" style="background:linear-gradient(135deg,#1a6fdc,#0a3a8a);">⚽</div><div class="ticket-team-name">${b.equipo_local}</div></div>
+            <div class="ticket-vs">VS</div>
+            <div class="ticket-team"><div class="ticket-shield" style="background:linear-gradient(135deg,#e03b3b,#8a1a1a);">⚽</div><div class="ticket-team-name">${b.equipo_visitante}</div></div>
+          </div>
+          <div class="ticket-info">
+            <div class="ticket-row"><span class="ticket-row-key">Fecha</span><span class="ticket-row-val">${b.fecha}</span></div>
+            <div class="ticket-row"><span class="ticket-row-key">Sector</span><span class="ticket-row-val">${b.sector}</span></div>
+            <div class="ticket-row"><span class="ticket-row-key">Precio</span><span class="ticket-row-val" style="color:#1a6fdc;">${b.precio} Bs</span></div>
+            <div class="ticket-row"><span class="ticket-row-key">Saldo restante</span><span class="ticket-row-val" style="color:#22d67a;">${b.saldo_restante} Bs</span></div>
+          </div>
+          <div class="ticket-sector">${b.sector}</div>
+          <div class="ticket-qr"><div class="qr-box">${b.codigo}</div></div>
+        </div>`;
+      closeModal('modal-compra');
+      openModal('modal-ticket-vip');
+      toast('success','🎟 ¡Boleto comprado! Saldo restante: '+b.saldo_restante+' Bs');
+    }else{
+      toast('error','⚠️ '+(d.error||'Error al comprar'));
+    }
+  }catch(e){toast('error','❌ Error de conexión');}
+}
+{% endblock %}

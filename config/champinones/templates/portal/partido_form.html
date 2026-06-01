@@ -1,0 +1,39 @@
+{% extends "portal/base_portal.html" %}
+{% block title %}Editar Partido{% endblock %}
+{% block nav_partidos %}active{% endblock %}
+{% block content %}
+<div class="page">
+  <div class="page-header">
+    <div><div class="page-title">✏️ Editar Partido</div></div>
+    <a href="{% url 'evento_lista' %}" class="btn btn-outline">← Volver</a>
+  </div>
+  <div class="card" style="max-width:600px;">
+    <div class="card-body">
+      <form method="post">{% csrf_token %}
+        {% if form.non_field_errors %}<div class="alert alert-error">{{ form.non_field_errors.0 }}</div>{% endif %}
+        <div class="form-row"><div class="form-group-inner"><label>Nombre del Evento</label>{{ form.nombre }}</div></div>
+        <div class="form-row cols-2">
+          <div class="form-group-inner"><label>Equipo Local</label>{{ form.equipo_local }}</div>
+          <div class="form-group-inner"><label>Equipo Visitante</label>{{ form.equipo_visitante }}</div>
+        </div>
+        <div class="form-row cols-2">
+          <div class="form-group-inner"><label>Fecha</label>{{ form.fecha }}</div>
+          <div class="form-group-inner"><label>Hora</label>{{ form.hora }}</div>
+        </div>
+        <div class="form-row cols-2">
+          <div class="form-group-inner"><label>Precio Base (BOB)</label>{{ form.precio_base }}</div>
+          <div class="form-group-inner"><label>Capacidad Total</label>{{ form.capacidad_total }}</div>
+        </div>
+        <div class="form-row cols-2">
+          <div class="form-group-inner"><label>Estado</label>{{ form.estado }}</div>
+        </div>
+        <div class="form-row"><div class="form-group-inner"><label>Descripción</label>{{ form.descripcion }}</div></div>
+        <div style="display:flex;gap:10px;margin-top:8px;">
+          <button type="submit" class="btn btn-primary">💾 Guardar</button>
+          <a href="{% url 'evento_lista' %}" class="btn btn-outline">Cancelar</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

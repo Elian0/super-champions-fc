@@ -1,0 +1,75 @@
+{% extends "portal/base_portal.html" %}
+{% block title %}Página de Prueba de Errores{% endblock %}
+{% block nav_dashboard %}active{% endblock %}
+{% block content %}
+<div class="page">
+  <div class="page-header">
+    <div><div class="page-title">🧪 Prueba de Manejadores de Error</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h3>Simular Errores</h3>
+    </div>
+    <div class="card-body" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+      
+      <a href="/test-error/400/" class="btn btn-outline" style="padding: 15px; text-align: center;">
+        <strong>Error 400</strong><br>
+        <small>Solicitud Incorrecta</small>
+      </a>
+      
+      <a href="/test-error/403/" class="btn btn-outline" style="padding: 15px; text-align: center;">
+        <strong>Error 403</strong><br>
+        <small>Acceso Prohibido</small>
+      </a>
+      
+      <a href="/test-error/404/" class="btn btn-outline" style="padding: 15px; text-align: center;">
+        <strong>Error 404</strong><br>
+        <small>No Encontrado</small>
+      </a>
+      
+      <a href="/test-error/500/" class="btn btn-outline" style="padding: 15px; text-align: center;">
+        <strong>Error 500</strong><br>
+        <small>Error Interno</small>
+      </a>
+
+      <a href="/test-error/503/" class="btn btn-outline" style="padding: 15px; text-align: center;">
+        <strong>Error 503</strong><br>
+        <small>Servicio No Disponible</small>
+      </a>
+      
+    </div>
+  </div>
+
+  <div class="card" style="margin-top: 20px;">
+    <div class="card-header">
+      <h3>📋 Descripción</h3>
+    </div>
+    <div class="card-body" style="line-height: 1.8; color: #34495e;">
+      <p><strong>✅ Manejadores de Error Implementados:</strong></p>
+      <ul style="margin-left: 20px; margin-top: 10px;">
+        <li><strong>400:</strong> Solicitud Incorrecta — Datos inválidos del cliente</li>
+        <li><strong>403:</strong> Acceso Prohibido — Permiso denegado</li>
+        <li><strong>404:</strong> No Encontrado — Página/recurso no existe</li>
+        <li><strong>500:</strong> Error Interno — Error del servidor</li>
+        <li><strong>502:</strong> Bad Gateway — Problema de comunicación</li>
+        <li><strong>503:</strong> Servicio No Disponible — En mantenimiento</li>
+      </ul>
+      
+      <p style="margin-top: 20px;"><strong>🎨 Características:</strong></p>
+      <ul style="margin-left: 20px; margin-top: 10px;">
+        <li>Diseño profesional y responsivo</li>
+        <li>Iconos emoji para identificación rápida</li>
+        <li>Mensajes personalizados en español</li>
+        <li>Botones de navegación contextual</li>
+        <li>Registro automático de errores en logs</li>
+        <li>Respuestas JSON para AJAX</li>
+        <li>Compatible con desarrollo y producción</li>
+      </ul>
+
+      <p style="margin-top: 20px;"><strong>📝 En DEBUG = False (Producción):</strong></p>
+      <p>Activa las páginas personalizadas. En DEBUG = True (Desarrollo), aún verás las pantallas amarillas con detalles técnicos.</p>
+    </div>
+  </div>
+</div>
+{% endblock %}

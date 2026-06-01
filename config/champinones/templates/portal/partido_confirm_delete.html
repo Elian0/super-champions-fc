@@ -1,0 +1,14 @@
+{% extends "portal/base_portal.html" %}
+{% block title %}Eliminar Partido{% endblock %}
+{% block content %}
+<div class="page"><div style="max-width:480px;margin:60px auto;"><div class="card">
+  <div class="card-header"><span class="modal-title">⚠️ Eliminar Partido</span></div>
+  <div class="card-body">
+    <p style="margin-bottom:20px;color:var(--text-secondary);">¿Eliminar el partido <strong style="color:#ff7070;">{{ object }}</strong>?</p>
+    <form method="post" style="display:flex;gap:10px;">{% csrf_token %}
+      <button type="submit" class="btn btn-danger">🗑 Eliminar</button>
+      <a href="{% url 'evento_lista' %}" class="btn btn-outline">Cancelar</a>
+    </form>
+  </div>
+</div></div></div>
+{% endblock %}

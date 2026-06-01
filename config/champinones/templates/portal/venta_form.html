@@ -1,0 +1,28 @@
+{% extends "portal/base_portal.html" %}
+{% block title %}Nueva Venta{% endblock %}
+{% block nav_ventas %}active{% endblock %}
+{% block content %}
+<div class="page">
+  <div class="page-header">
+    <div><div class="page-title">🎟 Nueva Venta</div></div>
+    <a href="{% url 'venta_lista' %}" class="btn btn-outline">← Volver</a>
+  </div>
+  <div class="card" style="max-width:560px;">
+    <div class="card-body">
+      <form method="post">{% csrf_token %}
+        {% if form.non_field_errors %}<div class="alert alert-error">{{ form.non_field_errors.0 }}</div>{% endif %}
+        <div class="form-row"><div class="form-group-inner"><label>Partido *</label>{{ form.evento }}{% if form.evento.errors %}<div class="field-error">{{ form.evento.errors.0 }}</div>{% endif %}</div></div>
+        <div class="form-row cols-2">
+          <div class="form-group-inner"><label>Miembro VIP (opcional)</label>{{ form.miembro_vip }}</div>
+          <div class="form-group-inner"><label>Sector</label>{{ form.sector }}</div>
+        </div>
+        <div class="form-row"><div class="form-group-inner"><label>Precio (BOB) *</label>{{ form.precio_pagado }}{% if form.precio_pagado.errors %}<div class="field-error">{{ form.precio_pagado.errors.0 }}</div>{% endif %}</div></div>
+        <div style="display:flex;gap:10px;margin-top:8px;">
+          <button type="submit" class="btn btn-success">🎟 Vender Boleto</button>
+          <a href="{% url 'venta_lista' %}" class="btn btn-outline">Cancelar</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

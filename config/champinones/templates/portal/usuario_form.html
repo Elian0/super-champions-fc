@@ -1,0 +1,31 @@
+{% extends "portal/base_portal.html" %}
+{% block title %}Editar Usuario{% endblock %}
+{% block nav_usuarios %}active{% endblock %}
+{% block content %}
+<div class="page">
+  <div class="page-header">
+    <div><div class="page-title">✏️ Editar Usuario</div></div>
+    <a href="{% url 'personal_lista' %}" class="btn btn-outline">← Volver</a>
+  </div>
+  <div class="card" style="max-width:520px;">
+    <div class="card-body">
+      <form method="post">{% csrf_token %}
+        {% if form.non_field_errors %}<div class="alert alert-error">{{ form.non_field_errors.0 }}</div>{% endif %}
+        <div class="form-row cols-2">
+          <div class="form-group-inner"><label>Nombre</label>{{ form.first_name }}</div>
+          <div class="form-group-inner"><label>Apellido</label>{{ form.last_name }}</div>
+        </div>
+        <div class="form-row"><div class="form-group-inner"><label>Correo</label>{{ form.email }}</div></div>
+        <div class="form-row cols-2">
+          <div class="form-group-inner"><label>Rol</label>{{ form.rol }}</div>
+          <div class="form-group-inner"><label>Estado</label>{{ form.is_active }}</div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:8px;">
+          <button type="submit" class="btn btn-primary">💾 Guardar</button>
+          <a href="{% url 'personal_lista' %}" class="btn btn-outline">Cancelar</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

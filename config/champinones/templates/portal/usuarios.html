@@ -1,0 +1,74 @@
+{% extends "portal/base_portal.html" %}
+{% block title %}Usuarios — Super Champiñones FC{% endblock %}
+{% block nav_usuarios %}active{% endblock %}
+{% block content %}
+<div class="page">
+  <div class="page-header">
+    <div><div class="page-title">Gestión de Personal</div><div class="page-sub">Cuentas de administradores y personal</div></div>
+    <button class="btn btn-primary" onclick="openModal('modal-usuario')">➕ Nuevo Usuario</button>
+  </div>
+  {% for msg in messages %}<div class="alert alert-{{ msg.tags }}" style="margin-bottom:16px;">{{ msg }}</div>{% endfor %}
+
+  <div class="card">
+    <div class="card-body" style="padding:0;">
+      <table>
+        <thead><tr><th>Nombre</th><th>Usuario</th><th>Correo</th><th>Rol</th><th>Estado</th><th>Acciones</th></tr></thead>
+        <tbody>
+          {% for u in usuarios %}
+          <tr>
+            <td><strong>{{ u.get_full_name|default:u.username }}</strong></td>
+            <td style="font-size:12px;color:var(--text-secondary);">{{ u.username }}</td>
+            <td style="font-size:12px;">{{ u.email }}</td>
+            <td><span class="badge {% if u.rol == 'ADMIN' %}badge-gold{% else %}badge-blue{% endif %}">{{ u.get_rol_display }}</span></td>
+            <td><span class="badge {% if u.is_active %}badge-green{% else %}badge-red{% endif %}">{% if u.is_active %}Activo{% else %}Inactivo{% endif %}</span></td>
+            <td class="action-btns">
+              <a href="{% url 'personal_editar' u.pk %}" class="btn btn-sm btn-primary">✏️ Editar</a>
+              {% if u.pk != request.user.pk %}
+              <a href="{% url 'personal_eliminar' u.pk %}" class="btn btn-sm btn-danger">🗑</a>
+              {% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="6"><div class="empty-state"><div class="empty-state-icon">👥</div><p>No hay usuarios registrados.</p></div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Nuevo Usuario -->
+<div class="modal-overlay" id="modal-usuario">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">➕ Nuevo Usuario</span><button class="modal-close" onclick="closeModal('modal-usuario')">✕</button></div>
+    <form method="post" action="{% url 'personal_crear' %}">{% csrf_token %}
+      <div class="modal-body">
+        <div class="form-row cols-2">
+          <div class="form-group-inner"><label>Nombre *</label><input type="text" name="first_name" class="form-input" placeholder="Nombre"></div>
+          <div class="form-group-inner"><label>Apellido *</label><input type="text" name="last_name" class="form-input" placeholder="Apellido"></div>
+        </div>
+        <div class="form-row cols-2">
+          <div class="form-group-inner"><label>Usuario *</label><input type="text" name="username" class="form-input" placeholder="usuario123"></div>
+          <div class="form-group-inner"><label>Correo *</label><input type="email" name="email" class="form-input" placeholder="correo@ejemplo.com"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group-inner"><label>Rol *</label>
+            <select name="rol" class="form-input">
+              <option value="PERSONAL">Personal</option>
+              <option value="ADMIN">Administrador</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row cols-2">
+          <div class="form-group-inner"><label>Contraseña *</label><input type="password" name="password1" class="form-input" placeholder="Mínimo 6 caracteres"></div>
+          <div class="form-group-inner"><label>Confirmar *</label><input type="password" name="password2" class="form-input" placeholder="Repite la contraseña"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModal('modal-usuario')">Cancelar</button>
+        <button type="submit" class="btn btn-primary">💾 Crear Usuario</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
