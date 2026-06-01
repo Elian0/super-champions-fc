@@ -83,13 +83,24 @@ LOGGING = {
     'formatters': {
         'verbose': {'format': '[{levelname}] {asctime} {module}: {message}', 'style': '{'},
     },
+    
     'handlers': {
-        'console': {'class': 'logging.StreamHandler', 'formatter': 'verbose'},
-        'file':    {'class': 'logging.FileHandler', 'filename': BASE_DIR / 'logs/champinones.log', 'formatter': 'verbose'},
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose'
+        },
     },
     'loggers': {
-        'champinones': {'handlers': ['console', 'file'], 'level': 'INFO', 'propagate': False},
-        'django': {'handlers': ['console', 'file'], 'level': 'ERROR', 'propagate': False},
+        'champinones': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'django': {
+            'handlers': ['console'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
     },
 }
 
