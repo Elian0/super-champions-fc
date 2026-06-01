@@ -55,8 +55,8 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 
 DATABASES = {
-    'default': dj_database_url.config(
-        default='mysql://root:@localhost:3306/super_champions_fc'
+    'default': dj_database_url.parse(
+        os.environ.get("DATABASE_URL")
     )
 }
 
