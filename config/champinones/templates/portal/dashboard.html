@@ -1,5 +1,5 @@
 {% extends "portal/base_portal.html" %}
-{% block title %}Dashboard — Super Champiñones FC{% endblock %}
+{% block title %}Dashboard — Club Deportivo Totora Real Oruro{% endblock %}
 {% block nav_dashboard %}active{% endblock %}
 
 {% block content %}
@@ -7,7 +7,7 @@
   <div class="page-header">
     <div>
       <div class="page-title">Dashboard</div>
-      <div class="page-sub">Bienvenido, {{ request.user.get_full_name|default:request.user.username }} — Super Champiñones FC</div>
+      <div class="page-sub">Bienvenido, {{ request.user.get_full_name|default:request.user.username }} — Club Deportivo Totora Real Oruro</div>
     </div>
     <div style="display:flex;gap:8px;">
       <a href="{% url 'evento_lista' %}" class="btn btn-primary btn-sm">⚽ Ver Partidos</a>

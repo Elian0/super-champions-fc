@@ -1,13 +1,15 @@
 """
-views.py — Super Champiñones FC
+views.py — CDT Real Oruro - Sistema de Gestión
 Vistas con lógica de negocio, RBAC y manejo de errores.
 Todas las respuestas JSON son compatibles con el frontend HTML existente.
 """
 
 import json
 import logging
+import base64
+import io
 from decimal import Decimal
-from datetime import date
+from datetime import date as _date  # noqa: F401  (sigue para retrocompat)
 
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
@@ -19,6 +21,7 @@ from django.db.models import Sum, Count, Q
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+from django.utils.timezone import localdate, localtime, now   # ← NUEVO
 from django.utils.translation import gettext_lazy as _
 from django.views import View
 from django.views.generic import (
@@ -77,6 +80,41 @@ def json_ok(data=None, **kwargs):
     payload.update(kwargs)
     return JsonResponse(payload)
 
+def _generar_qr_base64(texto: str) -> str:
+    """
+    Genera un QR PNG y lo retorna como data URI base64.
+    """
+
+    try:
+        import qrcode
+        from qrcode.constants import ERROR_CORRECT_M
+
+        qr = qrcode.QRCode(
+            version=None,
+            error_correction=ERROR_CORRECT_M,
+            box_size=8,
+            border=2,
+        )
+
+        qr.add_data(texto)
+        qr.make(fit=True)
+
+        img = qr.make_image(
+            fill_color="#0f2a5f",
+            back_color="white"
+        )
+
+        buf = io.BytesIO()
+        img.save(buf, format='PNG')
+
+        b64 = base64.b64encode(
+            buf.getvalue()
+        ).decode('ascii')
+
+        return f"data:image/png;base64,{b64}"
+
+    except ImportError:
+        return ""
 
 # ─────────────────────────────────────────────
 #  HU4 / HU8 — AUTENTICACIÓN
@@ -218,7 +256,7 @@ def dashboard(request):
       {% for v in ultimas_ventas %}...{% endfor %}    → tbody#dash-ventas-tbody
       {% for r in recargas_pendientes %}...{% endfor %} → tbody#dash-recargas-tbody
     """
-    hoy = date.today()
+    hoy = localdate()
 
     boletos_hoy  = Boleto.objects.filter(fecha_compra__date=hoy)
     recargas_hoy = Recarga.objects.filter(
@@ -840,6 +878,13 @@ def venta_crear(request):
         # Obtener detalles completos de factura
         factura = boleto.get_detalles_factura()
 
+        qr_b64 = _generar_qr_base64(
+            boleto.codigo
+        )
+
+        factura['qr'] = qr_b64
+        factura['qr_disponible'] = bool(qr_b64)
+
         return json_ok(
             boleto=factura,
             exito=True,
@@ -909,7 +954,7 @@ def cierre_caja(request):
         <form method="post" action="{% url 'cierre_caja' %}">...</form>
       {% endif %}
     """
-    hoy = date.today()
+    hoy = localdate()
 
     # Verificar si ya existe cierre para hoy
     cierre_existente = CierreCaja.objects.filter(
@@ -1012,7 +1057,7 @@ def apertura_caja(request):
     GET: Muestra formulario de apertura de caja.
     POST: Registra la apertura de caja con monto inicial.
     """
-    hoy = date.today()
+    hoy = localdate()
     apertura_existente = AperturaCaja.objects.filter(fecha=hoy).first()
     cierre_hoy = CierreCaja.objects.filter(fecha=hoy, estado=EstadoCierre.CERRADO).first()
     
@@ -1088,7 +1133,7 @@ def vip_portal(request):
 
     eventos = Evento.objects.filter(
         estado=Evento.EstadoEvento.PROGRAMADO,
-        fecha__gte=date.today(),
+        fecha__gte=localdate(),
     ).order_by('fecha')
 
     mis_boletos = Boleto.objects.filter(
@@ -1197,6 +1242,10 @@ def vip_comprar_boleto(request):
                 pago_con_saldo_vip = True,
             )
 
+        qr_b64 = _generar_qr_base64(
+            boleto.codigo
+        )
+
         return json_ok(
             boleto={
                 'codigo':         boleto.codigo,
@@ -1208,6 +1257,8 @@ def vip_comprar_boleto(request):
                 'precio':         str(boleto.precio_pagado),
                 'saldo_restante': str(miembro_lock.saldo),
                 'fecha_compra':   boleto.fecha_compra.strftime('%d/%m/%Y %H:%M'),
+                'qr':             qr_b64,
+                'qr_disponible':  bool(qr_b64),
             }
         )
     except Exception as exc:
@@ -1233,7 +1284,7 @@ def api_stats(request):
         document.getElementById('stat-ingresos').textContent = data.ingresos_hoy;
       });
     """
-    hoy = date.today()
+    hoy = localdate()
     boletos_hoy = Boleto.objects.filter(fecha_compra__date=hoy)
     return json_ok(
         boletos_hoy     = boletos_hoy.count(),
@@ -1261,7 +1312,7 @@ class VentaListView(PersonalOAdminRequired, ListView):
         ctx = super().get_context_data(**kwargs)
         ctx['eventos_disponibles'] = Evento.objects.filter(
             estado=Evento.EstadoEvento.PROGRAMADO,
-            fecha__gte=date.today(),
+            fecha__gte=localdate(),
         ).order_by('fecha')
         ctx['miembros_activos'] = MiembroVIP.objects.filter(
             estado=EstadoMiembro.ACTIVO
@@ -1284,13 +1335,13 @@ def factura_ver(request, pk):
     
     factura = boleto.get_detalles_factura()
     
-    # Información de la empresa (Super Champiñones FC)
+    # Información de la empresa (CDT REAL ORURO)
     empresa = {
-        'nombre': 'Super Champiñones FC',
+        'nombre': 'CDT REAL ORURO',
         'nit': '1234567890',  # Reemplazar con NIT real
         'actividad': 'Club Deportivo',
         'direccion': 'La Paz, Bolivia',
-        'telefono': '+591 2 XXXXXXX',
+        'telefono': '+591 2 524555',
     }
     
     context = {

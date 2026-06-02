@@ -1,0 +1,56 @@
+{# ────────────────────────────────────────────────────────────
+   vip/base_vip.html — Layout base para portal VIP
+   ────────────────────────────────────────────────────────────
+   FIX: el archivo original vip/portal.html extendía "base.html"
+        que NO existe. Este base_vip.html es el correcto.
+   ──────────────────────────────────────────────────────────── #}
+{% extends "portal/base_portal.html" %}
+
+{% block nav %}
+<nav class="vip-nav">
+  <div class="vip-nav-brand">
+    <div class="vip-nav-icon">⭐</div>
+    <div class="vip-nav-title">CDT Real Oruro — Portal VIP</div>
+  </div>
+  <div class="vip-nav-links">
+    <a class="vip-nav-link active" href="#sec-inicio" onclick="showSec('inicio',this)">🏠 Inicio</a>
+    <a class="vip-nav-link" href="#sec-partidos" onclick="showSec('partidos',this)">⚽ Partidos</a>
+    <a class="vip-nav-link" href="#sec-boletos" onclick="showSec('boletos',this)">🎟 Mis Boletos</a>
+    <a class="vip-nav-link" href="#sec-recargar" onclick="showSec('recargar',this)">💳 Recargar</a>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div class="vip-user-chip">
+      <div class="vip-avatar">{{ miembro.nombre_completo|first|upper }}</div>
+      <div class="user-info">
+        <div class="user-name" style="font-size:13px;">{{ miembro.nombre_completo }}</div>
+        <div style="color:var(--accent-gold);font-size:10px;text-transform:uppercase;letter-spacing:.5px;">⭐ Miembro VIP</div>
+      </div>
+    </div>
+    <form method="post" action="{% url 'logout' %}" style="display:inline">
+      {% csrf_token %}
+      <button type="submit" class="btn-logout">⬅ Salir</button>
+    </form>
+  </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+{# El contenido específico va aquí en cada vista hija #}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+{# Función showSec reutilizable para el portal VIP #}
+function showSec(name, link){
+  document.querySelectorAll('.vip-page').forEach(s => s.style.display = 'none');
+  const sec = document.getElementById('sec-' + name);
+  if(sec) sec.style.display = 'block';
+  document.querySelectorAll('.vip-nav-link').forEach(l => l.classList.remove('active'));
+  if(link) link.classList.add('active');
+  else {
+    const sel = document.querySelector(`[onclick*="'${name}'"]`);
+    if(sel) sel.classList.add('active');
+  }
+}
+</script>
+{% endblock %}

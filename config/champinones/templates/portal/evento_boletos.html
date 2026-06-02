@@ -50,65 +50,59 @@
     </div>
     <div class="card-body" style="overflow-x:auto;">
       {% if boletos %}
-      <table style="width:100%;border-collapse:collapse;">
+      <table class="boletos-table">
         <thead>
-          <tr style="background:#2c3e50;color:white;">
-            <th style="padding:12px;text-align:left;border-bottom:2px solid #34495e;">Código</th>
-            <th style="padding:12px;text-align:left;border-bottom:2px solid #34495e;">Factura</th>
-            <th style="padding:12px;text-align:left;border-bottom:2px solid #34495e;">Cliente</th>
-            <th style="padding:12px;text-align:left;border-bottom:2px solid #34495e;">CI</th>
-            <th style="padding:12px;text-align:left;border-bottom:2px solid #34495e;">Sector</th>
-            <th style="padding:12px;text-align:right;border-bottom:2px solid #34495e;">Precio</th>
-            <th style="padding:12px;text-align:left;border-bottom:2px solid #34495e;">Pago</th>
-            <th style="padding:12px;text-align:left;border-bottom:2px solid #34495e;">Fecha/Hora</th>
-            <th style="padding:12px;text-align:left;border-bottom:2px solid #34495e;">Vendido por</th>
-            <th style="padding:12px;text-align:center;border-bottom:2px solid #34495e;">Acciones</th>
+          <tr>
+            <th>Código</th>
+            <th>Factura</th>
+            <th>Cliente</th>
+            <th>CI</th>
+            <th>Sector</th>
+            <th>Precio</th>
+            <th>Pago</th>
+            <th>Fecha/Hora</th>
+            <th>Vendido por</th>
+            <th>Acciones</th>
           </tr>
         </thead>
         <tbody>
           {% for boleto in boletos %}
-          <tr style="border-bottom:1px solid #ecf0f1;{% cycle 'background:#f8f9fa;' '' %}">
-            <td style="padding:12px;"><strong>{{ boleto.codigo }}</strong></td>
-            <td style="padding:12px;">{{ boleto.numero_factura|default:"—" }}</td>
-            <td style="padding:12px;">
+          <tr>
+            <td><strong>{{ boleto.codigo }}</strong></td>
+            <td>{{ boleto.numero_factura|default:"—" }}</td>
+            <td>
               {% if boleto.miembro_vip %}
                 <strong>{{ boleto.miembro_vip.nombre_completo }}</strong>
               {% else %}
-                <span style="color:#7f8c8d;">Cliente General</span>
+                <span style="color:#a0b8d4;">Cliente General</span>
               {% endif %}
             </td>
-            <td style="padding:12px;">
+            <td>
               {% if boleto.miembro_vip %}
                 {{ boleto.miembro_vip.ci_completo }}
               {% else %}
                 —
               {% endif %}
             </td>
-            <td style="padding:12px;">
-              <span style="background:#ecf0f1;padding:4px 8px;border-radius:4px;font-size:12px;">
-                {{ boleto.get_sector_display }}
-              </span>
+            <td>
+              <span class="sector-badge">{{ boleto.get_sector_display }}</span>
             </td>
-            <td style="padding:12px;text-align:right;"><strong>{{ boleto.precio_pagado }} Bs</strong></td>
-            <td style="padding:12px;">
+            <td style="text-align:right;"><strong>{{ boleto.precio_pagado }} Bs</strong></td>
+            <td>
               {% if boleto.pago_con_saldo_vip %}
-                <span style="background:#3498db;color:white;padding:4px 8px;border-radius:4px;font-size:11px;font-weight:600;">
-                  Saldo VIP
-                </span>
+                <span class="badge badge-vip">Saldo VIP</span>
               {% else %}
-                <span style="background:#95a5a6;color:white;padding:4px 8px;border-radius:4px;font-size:11px;font-weight:600;">
-                  {{ boleto.get_metodo_pago_display }}
-                </span>
+                <span class="badge badge-efectivo">{{ boleto.get_metodo_pago_display }}</span>
               {% endif %}
             </td>
-            <td style="padding:12px;">
+            <td>
               <small>{{ boleto.fecha_compra|date:"d/m/Y H:i" }}</small>
             </td>
-            <td style="padding:12px;">
+            <td>
               <small>{{ boleto.vendido_por.get_full_name|default:"Sistema" }}</small>
             </td>
-            <td style="padding:12px;text-align:center;">
-              <a href="{% url 'factura_ver' boleto.pk %}" class="btn btn-xs btn-primary" style="padding:4px 8px;font-size:11px;" title="Ver factura">
+            <td style="text-align:center;">
+              <a href="{% url 'factura_ver' boleto.pk %}" class="btn btn-xs" title="Ver factura">
                 📄 Ver
               </a>
             </td>
@@ -117,8 +111,8 @@
         </tbody>
       </table>
       {% else %}
-      <div style="text-align:center;padding:40px;color:#7f8c8d;">
-        <div style="font-size:48px;margin-bottom:10px;">🎟️</div>
+      <div class="empty-state">
+        <div class="empty-icon">🎟️</div>
         <p>No hay boletos vendidos para este evento.</p>
       </div>
       {% endif %}
@@ -131,31 +125,31 @@
       <h3>Información del Evento</h3>
     </div>
     <div class="card-body">
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px;">
+      <div class="evento-info-grid">
         <div>
-          <div style="font-size:12px;color:#7f8c8d;text-transform:uppercase;font-weight:600;margin-bottom:5px;">Evento</div>
-          <div style="font-size:14px;color:#2c3e50;">{{ evento.nombre }}</div>
+          <div class="info-label">Evento</div>
+          <div class="info-value">{{ evento.nombre }}</div>
         </div>
         <div>
-          <div style="font-size:12px;color:#7f8c8d;text-transform:uppercase;font-weight:600;margin-bottom:5px;">Equipos</div>
-          <div style="font-size:14px;color:#2c3e50;">{{ evento.equipo_local }} vs {{ evento.equipo_visitante }}</div>
+          <div class="info-label">Equipos</div>
+          <div class="info-value">{{ evento.equipo_local }} vs {{ evento.equipo_visitante }}</div>
         </div>
         <div>
-          <div style="font-size:12px;color:#7f8c8d;text-transform:uppercase;font-weight:600;margin-bottom:5px;">Fecha y Hora</div>
-          <div style="font-size:14px;color:#2c3e50;">{{ evento.fecha|date:"d/m/Y" }} a las {{ evento.hora|time:"H:i" }}</div>
+          <div class="info-label">Fecha y Hora</div>
+          <div class="info-value">{{ evento.fecha|date:"d/m/Y" }} a las {{ evento.hora|time:"H:i" }}</div>
         </div>
         <div>
-          <div style="font-size:12px;color:#7f8c8d;text-transform:uppercase;font-weight:600;margin-bottom:5px;">Precio Base</div>
-          <div style="font-size:14px;color:#2c3e50;"><strong>{{ evento.precio_base }} Bs</strong></div>
+          <div class="info-label">Precio Base</div>
+          <div class="info-value"><strong>{{ evento.precio_base }} Bs</strong></div>
         </div>
         <div>
-          <div style="font-size:12px;color:#7f8c8d;text-transform:uppercase;font-weight:600;margin-bottom:5px;">Capacidad</div>
-          <div style="font-size:14px;color:#2c3e50;">{{ evento.capacidad_disponible }} / {{ evento.capacidad_total }}</div>
+          <div class="info-label">Capacidad</div>
+          <div class="info-value">{{ evento.capacidad_disponible }} / {{ evento.capacidad_total }}</div>
         </div>
         <div>
-          <div style="font-size:12px;color:#7f8c8d;text-transform:uppercase;font-weight:600;margin-bottom:5px;">Estado</div>
-          <div style="font-size:14px;color:#2c3e50;">
-            <span style="background:{% if evento.estado == 'FINALIZADO' %}#27ae60{% elif evento.estado == 'CANCELADO' %}#e74c3c{% elif evento.estado == 'EN_VENTA' %}#3498db{% else %}#f39c12{% endif %};color:white;padding:4px 8px;border-radius:4px;">
+          <div class="info-label">Estado</div>
+          <div class="info-value">
+            <span class="estado-badge estado-{{ evento.estado|lower }}">
               {{ evento.get_estado_display }}
             </span>
           </div>
@@ -166,54 +160,326 @@
 </div>
 
 <style>
-  @media print {
-    .page-header, .btn {
-      display: none !important;
-    }
-    
-    .card {
-      page-break-inside: avoid;
-      box-shadow: none;
-      border: 1px solid #bdc3c7;
-    }
+  /* FONDO OSCULO PROFESIONAL - TODO LEGIBLE */
+  .page {
+    background: #0f172a;
+    padding: 24px;
+    font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   }
-  
+
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .page-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #f1f5f9;
+    letter-spacing: -0.3px;
+  }
+
+  .page-sub {
+    color: #94a3b8;
+    font-size: 16px;
+    margin-top: 6px;
+    font-weight: 500;
+  }
+
+  /* Tarjetas de estadísticas - gradientes azules */
   .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 16px;
+    gap: 20px;
+    margin-bottom: 32px;
+  }
+
+  .stat-card {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    border: 1px solid #334155;
+    color: white;
+    padding: 22px 16px;
+    border-radius: 20px;
+    text-align: center;
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.3);
+    transition: transform 0.2s;
+  }
+
+  .stat-card:hover {
+    transform: translateY(-3px);
+    border-color: #3b82f6;
+  }
+
+  .stat-icon {
+    font-size: 36px;
+    margin-bottom: 12px;
+  }
+
+  .stat-value {
+    font-size: 32px;
+    font-weight: 800;
+    color: #ffffff;
+    margin-bottom: 6px;
+  }
+
+  .stat-label {
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #94a3b8;
+  }
+
+  /* Cards */
+  .card {
+    background: #1e293b;
+    border-radius: 20px;
+    border: 1px solid #334155;
+    overflow: hidden;
     margin-bottom: 24px;
   }
-  
-  .stat-card {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 20px;
-    border-radius: 8px;
-    text-align: center;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+
+  .card-header {
+    padding: 18px 24px;
+    border-bottom: 1px solid #334155;
+    background: #1e293b;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
   }
-  
-  .stat-icon {
-    font-size: 32px;
-    margin-bottom: 10px;
+
+  .card-header h3 {
+    margin: 0;
+    font-size: 1.35rem;
+    font-weight: 600;
+    color: #f1f5f9;
   }
-  
-  .stat-value {
-    font-size: 24px;
-    font-weight: 700;
-    margin-bottom: 5px;
+
+  /* TABLA - Letras BLANCAS sobre fondo oscuro */
+  .boletos-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
   }
-  
-  .stat-label {
+
+  .boletos-table thead tr {
+    background: #0f172a;
+  }
+
+  .boletos-table th {
+    padding: 14px 16px;
+    color: #e2e8f0;
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.3px;
+    text-align: left;
+    border-bottom: 2px solid #3b82f6;
+  }
+
+  .boletos-table td {
+    padding: 14px 16px;
+    color: #e2e8f0;
+    border-bottom: 1px solid #334155;
+    background-color: #1e293b;
+  }
+
+  /* Filas alternadas ligeramente más claras (sutil) */
+  .boletos-table tbody tr:nth-child(even) td {
+    background-color: #16202e;
+  }
+
+  .boletos-table tbody tr:hover td {
+    background-color: #2d3a4e;
+    transition: 0.2s;
+  }
+
+  /* Badges */
+  .sector-badge {
+    background: #334155;
+    color: #e2e8f0;
+    padding: 4px 10px;
+    border-radius: 30px;
     font-size: 12px;
-    opacity: 0.9;
-    text-transform: uppercase;
+    font-weight: 500;
+    display: inline-block;
   }
-  
-  .btn-xs {
-    padding: 4px 8px;
+
+  .badge {
+    padding: 4px 10px;
+    border-radius: 40px;
     font-size: 11px;
+    font-weight: 600;
+    display: inline-block;
+  }
+
+  .badge-vip {
+    background: #10b981;
+    color: white;
+  }
+
+  .badge-efectivo {
+    background: #64748b;
+    color: white;
+  }
+
+  /* Botones */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 18px;
+    border-radius: 40px;
+    font-weight: 500;
+    font-size: 13px;
+    transition: 0.2s;
+    cursor: pointer;
+    text-decoration: none;
+    border: 1px solid transparent;
+  }
+
+  .btn-outline {
+    background: transparent;
+    border-color: #475569;
+    color: #94a3b8;
+  }
+
+  .btn-outline:hover {
+    background: #334155;
+    border-color: #64748b;
+    color: #f1f5f9;
+  }
+
+  .btn-primary {
+    background: #3b82f6;
+    color: white;
+    border: none;
+  }
+
+  .btn-primary:hover {
+    background: #2563eb;
+  }
+
+  .btn-success {
+    background: #10b981;
+    color: white;
+  }
+
+  .btn-success:hover {
+    background: #059669;
+  }
+
+  .btn-sm {
+    padding: 5px 12px;
+    font-size: 12px;
+  }
+
+  .btn-xs {
+    padding: 4px 10px;
+    font-size: 11px;
+    border-radius: 30px;
+    background: #3b82f6;
+    color: white;
+    text-decoration: none;
+    font-weight: 500;
+  }
+
+  .btn-xs:hover {
+    background: #2563eb;
+  }
+
+  /* Estados evento */
+  .estado-badge {
+    padding: 5px 12px;
+    border-radius: 40px;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-block;
+  }
+
+  .estado-finalizado {
+    background: #064e3b;
+    color: #6ee7b7;
+  }
+
+  .estado-cancelado {
+    background: #7f1d1d;
+    color: #fca5a5;
+  }
+
+  .estado-en_venta {
+    background: #1e3a8a;
+    color: #93c5fd;
+  }
+
+  .estado-proximamente {
+    background: #854d0e;
+    color: #fde047;
+  }
+
+  /* Info evento grid */
+  .evento-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 24px;
+    padding: 8px 12px;
+  }
+
+  .info-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #94a3b8;
+    margin-bottom: 6px;
+  }
+
+  .info-value {
+    font-size: 15px;
+    font-weight: 500;
+    color: #e2e8f0;
+  }
+
+  /* Estado vacío */
+  .empty-state {
+    text-align: center;
+    padding: 56px 24px;
+    color: #94a3b8;
+  }
+
+  .empty-icon {
+    font-size: 56px;
+    margin-bottom: 14px;
+    opacity: 0.7;
+  }
+
+  /* Impresión */
+  @media print {
+    .page-header, .btn, .card-header .btn, .stats-grid {
+      display: none !important;
+    }
+    .card {
+      box-shadow: none;
+      border: 1px solid #ccc;
+      page-break-inside: avoid;
+      background: white;
+    }
+    .boletos-table td, .boletos-table th {
+      background-color: white !important;
+      color: black !important;
+      border: 1px solid #ccc;
+    }
+    .boletos-table thead tr {
+      background: #ddd !important;
+    }
+    .estado-badge, .badge {
+      border: 1px solid #aaa;
+    }
   }
 </style>
 {% endblock %}

@@ -1,5 +1,5 @@
 {% extends "portal/base_portal.html" %}
-{% block title %}Ventas — Super Champiñones FC{% endblock %}
+{% block title %}Club Deportivo Totora Real Oruro{% endblock %}
 {% block nav_ventas %}active{% endblock %}
 {% block content %}
 <div class="page">
@@ -145,10 +145,12 @@ async function procesarVenta(){
     const d = await r.json();
     if(d.ok){
       const b = d.boleto;
+      console.log("RESPUESTA COMPLETA:", d);
+      console.log("BOLETO:", b);
       document.getElementById('ticket-content').innerHTML = `
         <div class="ticket">
           <div class="ticket-header">
-            <div class="ticket-club">⚽ Super Champiñones FC</div>
+            <div class="ticket-club">⚽ CDT Real Oruro</div>
             <div class="ticket-address">Estadio Municipal de Bolivia</div>
             <div class="ticket-num">Código: #${b.codigo}</div>
           </div>
@@ -163,11 +165,30 @@ async function procesarVenta(){
             <div class="ticket-row"><span class="ticket-row-key">Titular</span><span class="ticket-row-val">${b.miembro}</span></div>
             ${b.ci !== '—' ? `<div class="ticket-row"><span class="ticket-row-key">CI</span><span class="ticket-row-val">${b.ci}</span></div>` : ''}
             <div class="ticket-row"><span class="ticket-row-key">Precio</span><span class="ticket-row-val" style="color:#1a6fdc;font-size:18px;">${b.precio} Bs</span></div>
-            <div class="ticket-row"><span class="ticket-row-key">Compra</span><span class="ticket-row-val">${b.fecha_compra}</span></div>
+            <div class="ticket-row"><span class="ticket-row-key">Compra</span><span class="ticket-row-val">${b.compra}</span></div>
             ${b.saldo_restante ? `<div class="ticket-row"><span class="ticket-row-key">Saldo restante</span><span class="ticket-row-val" style="color:#22d67a;">${b.saldo_restante} Bs</span></div>` : ''}
           </div>
           <div class="ticket-sector">${b.sector}</div>
-          <div class="ticket-qr"><div class="qr-box">${b.codigo}</div><div style="font-size:11px;color:#666;margin-top:8px;">Presenta este código en el ingreso</div></div>
+          <div class="ticket-qr">
+              ${
+                b.qr
+                ? `<img src="${b.qr}"
+                        alt="QR del boleto"
+                        style="
+                          width:180px;
+                          height:180px;
+                          background:white;
+                          padding:8px;
+                          border:1px solid #ddd;
+                          border-radius:8px;
+                        ">`
+                : `<div class="qr-box">${b.codigo}</div>`
+              }
+
+              <div style="font-size:11px;color:#666;margin-top:8px;">
+                  Presenta este QR en el ingreso
+              </div>
+          </div>
         </div>`;
       closeModal('modal-venta');
       openModal('modal-ticket');

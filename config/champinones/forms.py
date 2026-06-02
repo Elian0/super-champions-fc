@@ -1,5 +1,5 @@
 """
-forms.py — Super Champiñones FC
+forms.py — CDT Real Oruro - Sistema de Gestión
 ModelForms con validaciones bolivianas para CI, celular y moneda.
 """
 

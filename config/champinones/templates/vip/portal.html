@@ -1,11 +1,11 @@
 {% extends "base.html" %}
-{% block title %}Portal VIP — Super Champiñones FC{% endblock %}
+{% block title %}Portal VIP — Club Deportivo Totora Real Oruro{% endblock %}
 
 {% block nav %}
 <nav class="vip-nav">
   <div class="vip-nav-brand">
     <div class="vip-nav-icon">⭐</div>
-    <div class="vip-nav-title">Super Champiñones FC</div>
+    <div class="vip-nav-title">Club Deportivo Totora Real Oruro</div>
   </div>
   <div class="vip-nav-links">
     <a class="vip-nav-link active" href="#sec-inicio" onclick="showSec('inicio',this)">🏠 Inicio</a>
@@ -286,7 +286,7 @@ async function confirmarCompra(){
       document.getElementById('compra-saldo').textContent=b.saldo_restante+' Bs';
       document.getElementById('ticket-vip-content').innerHTML=`
         <div class="ticket">
-          <div class="ticket-header"><div class="ticket-club">⚽ Super Champiñones FC</div><div class="ticket-num">Código: #${b.codigo}</div></div>
+          <div class="ticket-header"><div class="ticket-club">⚽ CDT REAL ORURO</div><div class="ticket-num">Código: #${b.codigo}</div></div>
           <div class="ticket-match">
             <div class="ticket-team"><div class="ticket-shield" style="background:linear-gradient(135deg,#1a6fdc,#0a3a8a);">⚽</div><div class="ticket-team-name">${b.equipo_local}</div></div>
             <div class="ticket-vs">VS</div>

@@ -1,5 +1,5 @@
 """
-urls.py — Super Champiñones FC
+urls.py — CDT Real Oruro - Sistema de Gestión
 Enrutamiento semántico de todas las vistas del sistema.
 """
 

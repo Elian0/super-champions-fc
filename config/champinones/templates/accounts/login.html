@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Login — Super Champiñones FC{% endblock %}
+{% block title %}Login — CDT Real Oruro{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -71,10 +71,6 @@
       </form>
       <div class="divider">¿No tienes cuenta VIP?</div>
       <button class="btn-main gold-ghost" onclick="showRegister()">✨ Registrarse como Miembro VIP</button>
-      <div class="login-demo">
-        <div><span>Admin:</span> admin@champinones.bo / admin123</div>
-        <div><span>Personal:</span> personal@champinones.bo / admin123</div>
-      </div>
     </div>
 
     <div class="login-panel" id="panel-register" {% if not show_register %}style="display:none"{% endif %}>

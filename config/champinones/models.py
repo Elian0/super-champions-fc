@@ -1,5 +1,5 @@
 """
-models.py — Super Champiñones FC
+models.py — CDT Real Oruro - Sistema de Gestión
 Definición de todos los modelos del sistema con validadores bolivianos.
 """
 
@@ -587,29 +587,108 @@ class Boleto(models.Model):
         super().save(*args, **kwargs)
 
     def get_detalles_factura(self):
-        """Retorna un diccionario con todos los detalles de factura."""
+        """
+        Retorna un diccionario con todos los detalles de factura.
+        Incluye QR en formato base64.
+        """
+        import base64
+        import io
+
+        try:
+            import qrcode
+            from qrcode.constants import ERROR_CORRECT_M
+
+            qr = qrcode.QRCode(
+                version=None,
+                error_correction=ERROR_CORRECT_M,
+                box_size=8,
+                border=2,
+            )
+
+            qr.add_data(self.codigo)
+            qr.make(fit=True)
+
+            img = qr.make_image(
+                fill_color="#0f2a5f",
+                back_color="white"
+            )
+
+            buf = io.BytesIO()
+            img.save(buf, format='PNG')
+
+            qr_b64 = base64.b64encode(
+                buf.getvalue()
+            ).decode('ascii')
+
+            qr_data = f"data:image/png;base64,{qr_b64}"
+
+        except ImportError:
+            qr_data = ""
+
         return {
             'numero_factura': self.numero_factura or self.generar_numero_factura(),
+
             'codigo_boleto': self.codigo,
+            'codigo': self.codigo,  # alias útil para JS
+
             'fecha': self.fecha_compra.strftime('%d/%m/%Y'),
             'hora': self.fecha_compra.strftime('%H:%M:%S'),
+
             'evento': str(self.evento),
             'equipo_local': self.evento.equipo_local,
             'equipo_visitante': self.evento.equipo_visitante,
+
             'fecha_evento': self.evento.fecha.strftime('%d/%m/%Y'),
             'hora_evento': self.evento.hora.strftime('%H:%M'),
+
             'sector': self.get_sector_display(),
+
             'subtotal': f'{self.subtotal:.2f}',
             'iva_13': f'{self.impuesto_iva:.2f}',
             'descuento': f'{self.descuento:.2f}',
             'total': f'{self.total_factura:.2f}',
-            'cliente': self.miembro_vip.nombre_completo if self.miembro_vip else 'Cliente General',
-            'ci_cliente': self.miembro_vip.ci_completo if self.miembro_vip else 'N/A',
-            'vendido_por': self.vendido_por.get_full_name() if self.vendido_por else 'Sistema',
+
+            'precio': f'{self.precio_pagado:.2f}',
+            'precio_pagado': f'{self.precio_pagado:.2f}',
+            'compra': self.fecha_compra.strftime('%d/%m/%Y %H:%M:%S'),
+
+            'cliente': (
+                self.miembro_vip.nombre_completo
+                if self.miembro_vip
+                else 'Público General'
+            ),
+
+            'miembro': (
+                self.miembro_vip.nombre_completo
+                if self.miembro_vip
+                else 'Público General'
+            ),
+
+            'ci': (
+                self.miembro_vip.ci_completo
+                if self.miembro_vip
+                else '—'
+            ),
+
+            'ci_cliente': (
+                self.miembro_vip.ci_completo
+                if self.miembro_vip
+                else 'N/A'
+            ),
+
+            'vendido_por': (
+                self.vendido_por.get_full_name()
+                if self.vendido_por
+                else 'Sistema'
+            ),
+
             'metodo_pago': self.get_metodo_pago_display(),
             'referencia_pago': self.referencia_pago or 'N/A',
-        }
 
+            # NUEVO
+            'qr': qr_data,
+            'qr_disponible': bool(qr_data),
+        }
 
 # ─────────────────────────────────────────────
 #  CIERRE DE CAJA  (HU5)
